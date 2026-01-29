@@ -26,29 +26,67 @@ $cap = trim((string)($data['cap'] ?? ''));
 $password = (string)($data['password'] ?? '');
 $passwordConfirm = (string)($data['password_confirm'] ?? '');
 
-if ($nome === '' || $cognome === '' || $mail === '' || $telefono === '' || $via === '' ||
-    $citta === '' || $provincia === '' || $cap === '' || $password === '') {
-    Response::error("Compila tutti i campi", 400);
+// Validazioni backend dettagliate
+$errors = [];
+
+if (empty($nome)) {
+    $errors['nome'] = "Il nome è obbligatorio";
 }
 
-if (!filter_var($mail, FILTER_VALIDATE_EMAIL)) {
-    Response::error("Email non valida", 400);
+if (empty($cognome)) {
+    $errors['cognome'] = "Il cognome è obbligatorio";
 }
 
-if ($password !== $passwordConfirm) {
-    Response::error("Le password non coincidono", 400);
+if (empty($mail)) {
+    $errors['mail'] = "L'email è obbligatoria";
+} elseif (!filter_var($mail, FILTER_VALIDATE_EMAIL)) {
+    $errors['mail'] = "Email non valida";
 }
 
-if (strlen($password) < 6) {
-    Response::error("Password troppo corta (min 6 caratteri)", 400);
+if (empty($telefono)) {
+    $errors['telefono'] = "Il telefono è obbligatorio";
+} elseif (strlen($telefono) < 10) {
+    $errors['telefono'] = "Inserisci un numero di telefono valido";
 }
 
-if (strlen($provincia) !== 2) {
-    Response::error("Provincia deve essere di 2 caratteri", 400);
+if (empty($via)) {
+    $errors['via'] = "L'indirizzo è obbligatorio";
 }
 
-if (strlen($cap) !== 5 || !is_numeric($cap)) {
-    Response::error("CAP non valido (5 cifre)", 400);
+if (empty($citta)) {
+    $errors['citta'] = "La città è obbligatoria";
+}
+
+if (empty($provincia)) {
+    $errors['provincia'] = "La provincia è obbligatoria";
+} elseif (strlen($provincia) !== 2) {
+    $errors['provincia'] = "Provincia deve essere di 2 caratteri (es. MI)";
+}
+
+if (empty($cap)) {
+    $errors['cap'] = "Il CAP è obbligatorio";
+} elseif (strlen($cap) !== 5 || !is_numeric($cap)) {
+    $errors['cap'] = "CAP non valido (5 cifre)";
+}
+
+if (empty($password)) {
+    $errors['password'] = "La password è obbligatoria";
+} elseif (strlen($password) < 6) {
+    $errors['password'] = "Password troppo corta (min 6 caratteri)";
+}
+
+if (empty($passwordConfirm)) {
+    $errors['password_confirm'] = "Conferma la password";
+} elseif ($password !== $passwordConfirm) {
+    $errors['password_confirm'] = "Le password non coincidono";
+}
+
+if (!empty($errors)) {
+    Response::json([
+        "success" => false,
+        "message" => "Errori di validazione",
+        "errors" => $errors
+    ], 400);
 }
 
 try {

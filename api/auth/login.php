@@ -17,6 +17,29 @@ if (!$data || !isset($data['email'], $data['password'])) {
 $email = trim((string)$data['email']);
 $password = (string)$data['password'];
 
+// Validazioni backend
+$errors = [];
+
+if (empty($email)) {
+    $errors['email'] = "L'email è obbligatoria";
+} elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $errors['email'] = "Email non valida";
+}
+
+if (empty($password)) {
+    $errors['password'] = "La password è obbligatoria";
+} elseif (strlen($password) < 6) {
+    $errors['password'] = "La password deve essere di almeno 6 caratteri";
+}
+
+if (!empty($errors)) {
+    Response::json([
+        "success" => false,
+        "message" => "Errori di validazione",
+        "errors" => $errors
+    ], 400);
+}
+
 try {
     $stmt = $conn->prepare("
         SELECT id, mail, password_hash, ruolo, blocked

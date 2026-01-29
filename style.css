@@ -1437,6 +1437,24 @@ body {
   padding: 0.6rem 0.95rem;
   color: var(--text);
   font-size: 0.9rem;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input.error {
+  border-color: #ff3b30;
+}
+
+.form-group input.success {
+  border-color: #34c759;
+}
+
+.field-error {
+  display: block;
+  color: #ff3b30;
+  font-size: 0.75rem;
+  margin-top: 0.4rem;
+  min-height: 1rem;
+  padding-left: 0.95rem;
 }
 
 .form-group input::placeholder {
