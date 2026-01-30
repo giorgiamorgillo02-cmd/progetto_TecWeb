@@ -115,26 +115,28 @@
     </div>
     <div class="modal-body">
       <form id="editProfileForm">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="editNome">Nome *</label>
-            <input type="text" id="editNome" name="nome" required />
-          </div>
-          <div class="form-group">
-            <label for="editCognome">Cognome *</label>
-            <input type="text" id="editCognome" name="cognome" required />
-          </div>
+        <div class="form-group">
+          <label for="editNome">Nome *</label>
+          <input type="text" id="editNome" name="nome" required />
+          <span class="field-error" id="editNomeError"></span>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="editEmail">Email *</label>
-            <input type="email" id="editEmail" name="mail" required />
-          </div>
-          <div class="form-group">
-            <label for="editTelefono">Telefono</label>
-            <input type="tel" id="editTelefono" name="telefono" />
-          </div>
+        <div class="form-group">
+          <label for="editCognome">Cognome *</label>
+          <input type="text" id="editCognome" name="cognome" required />
+          <span class="field-error" id="editCognomeError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="editEmail">Email *</label>
+          <input type="email" id="editEmail" name="mail" required />
+          <span class="field-error" id="editEmailError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="editTelefono">Telefono</label>
+          <input type="tel" id="editTelefono" name="telefono" />
+          <span class="field-error" id="editTelefonoError"></span>
         </div>
 
         <div class="form-group">
@@ -145,27 +147,31 @@
             name="via"
             placeholder="Via, numero civico"
           />
+          <span class="field-error" id="editViaError"></span>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="editCitta">Città</label>
-            <input type="text" id="editCitta" name="citta" />
-          </div>
-          <div class="form-group">
-            <label for="editProvincia">Provincia</label>
-            <input
-              type="text"
-              id="editProvincia"
-              name="provincia"
-              maxlength="2"
-              placeholder="Es: MI"
-            />
-          </div>
-          <div class="form-group">
-            <label for="editCap">CAP</label>
-            <input type="text" id="editCap" name="cap" maxlength="5" />
-          </div>
+        <div class="form-group">
+          <label for="editCitta">Città</label>
+          <input type="text" id="editCitta" name="citta" />
+          <span class="field-error" id="editCittaError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="editProvincia">Provincia</label>
+          <input
+            type="text"
+            id="editProvincia"
+            name="provincia"
+            maxlength="2"
+            placeholder="Es: MI"
+          />
+          <span class="field-error" id="editProvinciaError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="editCap">CAP</label>
+          <input type="text" id="editCap" name="cap" maxlength="5" />
+          <span class="field-error" id="editCapError"></span>
         </div>
 
         <div class="form-actions">
@@ -213,7 +219,7 @@
           />
         </div>
 
-        <div class="form-group">
+        <div class="form-group password-input-wrapper">
           <label for="changePasswordNew">Nuova Password</label>
           <input
             type="password"
@@ -223,9 +229,21 @@
             required
             minlength="6"
           />
+          <button
+            type="button"
+            class="password-toggle"
+            data-target="changePasswordNew"
+          >
+            <img
+              src="img/pw_nascosta.png"
+              alt="Mostra password"
+              class="eye-icon"
+            />
+          </button>
+          <span class="field-error" id="changePasswordNewError"></span>
         </div>
 
-        <div class="form-group">
+        <div class="form-group password-input-wrapper">
           <label for="changePasswordConfirm">Conferma Password</label>
           <input
             type="password"
@@ -235,6 +253,18 @@
             required
             minlength="6"
           />
+          <button
+            type="button"
+            class="password-toggle"
+            data-target="changePasswordConfirm"
+          >
+            <img
+              src="img/pw_nascosta.png"
+              alt="Mostra password"
+              class="eye-icon"
+            />
+          </button>
+          <span class="field-error" id="changePasswordConfirmError"></span>
         </div>
 
         <div class="form-actions">

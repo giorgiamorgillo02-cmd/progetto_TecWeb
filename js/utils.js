@@ -100,6 +100,152 @@ function formatPrice(price) {
   return `€${parseFloat(price).toFixed(2)}`;
 }
 
+// ===== FUNZIONI DI VALIDAZIONE =====
+
+// Valida campo obbligatorio
+function validateRequired(value, fieldName) {
+  if (!value || value.trim() === "") {
+    return `${fieldName} è obbligatorio`;
+  }
+  return "";
+}
+
+// Valida email
+function validateEmail(email) {
+  if (!email || email.trim() === "") {
+    return "L'email è obbligatoria";
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email.trim())) {
+    return "Inserisci un'email valida";
+  }
+  return "";
+}
+
+// Valida password
+function validatePassword(password, minLength = 6) {
+  if (!password || password.trim() === "") {
+    return "La password è obbligatoria";
+  }
+  if (password.length < minLength) {
+    return `La password deve contenere almeno ${minLength} caratteri`;
+  }
+  return "";
+}
+
+// Valida conferma password
+function validatePasswordConfirm(password, confirmPassword) {
+  if (!confirmPassword || confirmPassword.trim() === "") {
+    return "Conferma la password";
+  }
+  if (password !== confirmPassword) {
+    return "Le password non coincidono";
+  }
+  return "";
+}
+
+// Valida telefono
+function validateTelefono(telefono) {
+  if (!telefono || telefono.trim() === "") {
+    return "Il telefono è obbligatorio";
+  }
+  const cleaned = telefono.replace(/\s/g, "");
+  if (cleaned.length < 9 || cleaned.length > 15) {
+    return "Inserisci un numero di telefono valido (9-15 cifre)";
+  }
+  if (!/^\d+$/.test(cleaned)) {
+    return "Il telefono deve contenere solo numeri";
+  }
+  return "";
+}
+
+// Valida provincia
+function validateProvincia(provincia) {
+  if (!provincia || provincia.trim() === "") {
+    return "La provincia è obbligatoria";
+  }
+  if (provincia.length !== 2) {
+    return "La provincia deve essere di 2 caratteri (es. MI)";
+  }
+  if (!/^[A-Z]{2}$/.test(provincia.toUpperCase())) {
+    return "La provincia deve contenere solo lettere (es. MI)";
+  }
+  return "";
+}
+
+// Valida CAP
+function validateCap(cap) {
+  if (!cap || cap.trim() === "") {
+    return "Il CAP è obbligatorio";
+  }
+  if (cap.length !== 5) {
+    return "Il CAP deve essere di 5 cifre";
+  }
+  if (!/^\d{5}$/.test(cap)) {
+    return "Il CAP deve contenere solo numeri";
+  }
+  return "";
+}
+
+// Valida prezzo
+function validatePrezzo(prezzo) {
+  if (!prezzo || prezzo.toString().trim() === "") {
+    return "Il prezzo è obbligatorio";
+  }
+  const prezzoNum = parseFloat(prezzo);
+  if (isNaN(prezzoNum) || prezzoNum <= 0) {
+    return "Inserisci un prezzo valido maggiore di 0";
+  }
+  return "";
+}
+
+// Mostra/nascondi errore per un campo
+function showFieldError(input, errorSpan, message) {
+  if (!input || !errorSpan) return;
+
+  if (message) {
+    input.classList.add("input-error");
+    input.classList.remove("input-success");
+    errorSpan.textContent = message;
+    errorSpan.style.display = "block";
+  } else {
+    input.classList.remove("input-error");
+    input.classList.add("input-success");
+    errorSpan.textContent = "";
+    errorSpan.style.display = "none";
+  }
+}
+
+// Pulisce tutti gli errori in un form
+function clearFormErrors(formElement) {
+  if (!formElement) return;
+
+  const inputs = formElement.querySelectorAll("input, select, textarea");
+  inputs.forEach((input) => {
+    input.classList.remove("input-error", "input-success");
+  });
+
+  const errorSpans = formElement.querySelectorAll(".field-error");
+  errorSpans.forEach((span) => {
+    span.textContent = "";
+    span.style.display = "none";
+  });
+}
+
+// Verifica se un'email è già registrata
+async function checkEmailExists(email) {
+  try {
+    const response = await fetch(
+      `api/auth/check-email.php?email=${encodeURIComponent(email)}`,
+    );
+    const data = await response.json();
+    return data.exists || false;
+  } catch (error) {
+    console.error("Errore verifica email:", error);
+    return false;
+  }
+}
+
 // Genera stile immagine prodotto
 function getProductImageStyle(product) {
   if (product.image_path && product.image_path.includes("pinterest.com")) {
@@ -133,6 +279,7 @@ function debounce(func, wait) {
 // Gestione toggle password
 function initPasswordToggles() {
   const passwordToggles = document.querySelectorAll(".password-toggle");
+
   passwordToggles.forEach((toggle) => {
     toggle.addEventListener("click", function () {
       const targetId = this.getAttribute("data-target");
@@ -141,10 +288,10 @@ function initPasswordToggles() {
 
       if (input.type === "password") {
         input.type = "text";
-        icon.textContent = "👁️‍🗨️";
+        icon.src = "img/pw_visibile.png";
       } else {
         input.type = "password";
-        icon.textContent = "👁️";
+        icon.src = "img/pw_nascosta.png";
       }
     });
   });

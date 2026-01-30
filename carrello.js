@@ -80,6 +80,7 @@ function initCarrelloPage() {
     }
     renderCart();
     updateCartCount();
+    setupClearCartModal();
   }
 
   // Salva il carrello nel localStorage
@@ -232,6 +233,7 @@ function initCarrelloPage() {
     cart[index].quantity = newQuantity;
     saveCart();
     renderCart();
+    updateCartCount();
   }
 
   // Rimuovi prodotto dal carrello
@@ -248,19 +250,54 @@ function initCarrelloPage() {
   }
 
   // Svuota il carrello
+  // Svuota il carrello
   function clearCart() {
+    // se carrello vuoto: non fa niente
     if (cart.length === 0) return;
+    //se carrello almeno 1 articolo-> modale di confera
+    const modal = document.getElementById("clearCartConfirmModal");
+    modal.style.display = "flex";
+  }
 
-    if (confirm("Sei sicuro di voler svuotare il carrello?")) {
+  // Configura i listener per la modale di svuotamento
+  function setupClearCartModal() {
+    const modal = document.getElementById("clearCartConfirmModal");
+    const confirmBtn = document.getElementById("confirmClearCartBtn");
+    const cancelBtn = document.getElementById("cancelClearCartBtn");
+
+    // clona bottone (rimuove vecchi listener per evitare doppi click se ricarichi la pagina)
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+    //se conferma
+    newConfirmBtn.addEventListener("click", () => {
+      //svuota l'array
       cart = [];
+      //salva e aggiorna l'interfaccia
       saveCart();
       renderCart();
       updateCartCount();
-
+      //feedback utente
       if (typeof showToast === "function") {
-        showToast("Carrello svuotato");
+        showToast("Carrello svuotato con successo");
       }
-    }
+      //chiude modale
+      closeClearCartModal();
+    });
+
+    //se annulla
+    cancelBtn.addEventListener("click", closeClearCartModal);
+
+    //se clicca fuori
+    window.addEventListener("click", (e) => {
+      if (e.target === modal) closeClearCartModal();
+    });
+  }
+
+  // Funzione per chiudere la modale
+  function closeClearCartModal() {
+    const modal = document.getElementById("clearCartConfirmModal");
+    if (modal) modal.style.display = "none";
   }
 
   // Aggiorna i totali

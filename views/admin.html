@@ -50,7 +50,8 @@
     </div>
   </div>
 
-  <!-- Product Modal -->
+  <!-- MODALI PRODOTTO -->
+  <!-- Aggiungi prodotto -->
   <div id="productModal" class="modal">
     <div class="modal-content">
       <span class="modal-close" id="closeProductModal">&times;</span>
@@ -59,35 +60,41 @@
         <input type="hidden" id="product-id" />
 
         <div class="form-group">
-          <label for="product-titolo">Titolo</label>
+          <label for="product-titolo">*Titolo</label>
           <input type="text" id="product-titolo" required />
+          <span class="field-error" id="productTitoloError"></span>
         </div>
 
         <div class="form-group">
-          <label for="product-descrizione">Descrizione</label>
+          <label for="product-descrizione">*Descrizione</label>
           <textarea id="product-descrizione" rows="3" required></textarea>
+          <span class="field-error" id="productDescrizioneError"></span>
         </div>
 
         <div class="form-group">
-          <label for="product-autore">Autore</label>
+          <label for="product-autore">*Autore</label>
           <input type="text" id="product-autore" value="sconosciuto" required />
+          <span class="field-error" id="productAutoreError"></span>
         </div>
 
         <div class="form-group">
-          <label for="product-prezzo">Prezzo (€)</label>
+          <label for="product-prezzo">*Prezzo (€)</label>
           <input type="number" id="product-prezzo" step="0.01" required />
+          <span class="field-error" id="productPrezzoError"></span>
         </div>
 
         <div class="form-group">
-          <label for="product-image">URL Immagine</label>
-          <input type="text" id="product-image" />
+          <label for="product-image">*URL Immagine</label>
+          <input type="text" id="product-image" required />
+          <span class="field-error" id="productImageError"></span>
         </div>
 
         <div class="form-group">
-          <label for="product-categoria">Categoria</label>
-          <select id="product-categoria">
-            <option value="">Seleziona categoria</option>
+          <label for="product-categoria">*Categoria</label>
+          <select id="product-categoria" required>
+            <option value="">-- Seleziona categoria --</option>
           </select>
+          <span class="field-error" id="productCategoriaError"></span>
         </div>
 
         <div class="form-actions">
@@ -100,12 +107,66 @@
     </div>
   </div>
 
-  <!-- User Modal -->
+  <!-- elimina prodotto -->
+  <div id="deleteConfirmModal" class="modal">
+    <div class="modal-content confirmation-content">
+      <h3>Elimina Prodotto</h3>
+      <p>Sei sicuro di voler eliminare questo prodotto?</p>
+
+      <div class="form-actions" style="justify-content: center; gap: 15px">
+        <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">
+          Annulla
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+          Elimina
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALI UTENTE -->
+  <!-- dettagli utente -->
   <div id="userModal" class="modal">
     <div class="modal-content">
       <span class="modal-close" id="closeUserModal">&times;</span>
       <h2>Dettagli Utente</h2>
       <div id="userDetail"></div>
+    </div>
+  </div>
+
+  <!-- blocco utente -->
+  <div id="blockUserConfirmModal" class="modal">
+    <div class="modal-content confirmation-content">
+      <h3 id="blockModalTitle">Blocca Utente</h3>
+      <p id="blockModalMessage">Sei sicuro di voler bloccare questo utente?</p>
+
+      <div class="form-actions" style="justify-content: center; gap: 15px">
+        <button type="button" class="btn btn-secondary" id="cancelBlockBtn">
+          Annulla
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmBlockBtn">
+          Conferma
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- admin utente -->
+  <div id="adminRoleConfirmModal" class="modal">
+    <div class="modal-content confirmation-content">
+      <h3 id="adminRoleModalTitle">Gestione Ruoli</h3>
+      <p id="adminRoleModalMessage">
+        Sei sicuro di voler modificare i permessi di questo utente?
+      </p>
+
+      <div class="form-actions" style="justify-content: center; gap: 15px">
+        <button type="button" class="btn btn-secondary" id="cancelAdminRoleBtn">
+          Annulla
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmAdminRoleBtn">
+          Conferma
+        </button>
+      </div>
     </div>
   </div>
 </section>

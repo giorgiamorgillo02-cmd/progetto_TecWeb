@@ -16,25 +16,28 @@
         <div class="checkout-section">
           <h2>Dati di spedizione</h2>
           <form id="checkoutForm" class="checkout-form">
-            <div class="form-row two-cols">
-              <div class="form-group">
-                <label for="nome">Nome</label>
-                <input type="text" id="nome" name="nome" required />
-              </div>
-              <div class="form-group">
-                <label for="cognome">Cognome</label>
-                <input type="text" id="cognome" name="cognome" required />
-              </div>
+            <div class="form-group">
+              <label for="nome">Nome</label>
+              <input type="text" id="nome" name="nome" required />
+              <span class="field-error" id="nomeError"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="cognome">Cognome</label>
+              <input type="text" id="cognome" name="cognome" required />
+              <span class="field-error" id="cognomeError"></span>
             </div>
 
             <div class="form-group">
               <label for="email">Email</label>
               <input type="email" id="email" name="email" required />
+              <span class="field-error" id="emailError"></span>
             </div>
 
             <div class="form-group">
               <label for="telefono">Telefono</label>
               <input type="tel" id="telefono" name="telefono" required />
+              <span class="field-error" id="telefonoError"></span>
             </div>
 
             <div class="form-group">
@@ -46,27 +49,31 @@
                 placeholder="Via, numero civico"
                 required
               />
+              <span class="field-error" id="viaError"></span>
             </div>
 
-            <div class="form-row three-cols">
-              <div class="form-group">
-                <label for="citta">Città</label>
-                <input type="text" id="citta" name="citta" required />
-              </div>
-              <div class="form-group">
-                <label for="provincia">Provincia</label>
-                <input
-                  type="text"
-                  id="provincia"
-                  name="provincia"
-                  maxlength="2"
-                  required
-                />
-              </div>
-              <div class="form-group">
-                <label for="cap">CAP</label>
-                <input type="text" id="cap" name="cap" maxlength="5" required />
-              </div>
+            <div class="form-group">
+              <label for="citta">Città</label>
+              <input type="text" id="citta" name="citta" required />
+              <span class="field-error" id="cittaError"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="provincia">Provincia</label>
+              <input
+                type="text"
+                id="provincia"
+                name="provincia"
+                maxlength="2"
+                required
+              />
+              <span class="field-error" id="provinciaError"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="cap">CAP</label>
+              <input type="text" id="cap" name="cap" maxlength="5" required />
+              <span class="field-error" id="capError"></span>
             </div>
 
             <div class="form-group">

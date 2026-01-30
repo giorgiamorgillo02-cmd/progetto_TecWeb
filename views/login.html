@@ -1,26 +1,18 @@
 <!-- PAGINA LOGIN -->
 <div class="auth-page">
-  <div class="container auth-grid">
-    <div class="auth-intro">
-      <h1>Bentornato su Artly</h1>
-      <p>
-        Accedi per gestire i tuoi ordini, salvare le tue stampe preferite e
-        riprendere i progetti dove li avevi lasciati.
-      </p>
-      <ul class="auth-points">
-        <li>✔ Storico ordini sempre disponibile</li>
-        <li>✔ Indirizzi e metodi di pagamento salvati</li>
-        <li>✔ Accesso rapido alle tue grafiche</li>
-      </ul>
-    </div>
-
+  <div class="auth-container">
     <div class="auth-card">
-      <h2>Accedi</h2>
-      <p class="auth-subtitle">Entra nel tuo account Artly.</p>
+      <div class="auth-header">
+        <h1>Bentornato su Artly</h1>
+        <p class="auth-description">
+          Accedi per gestire i tuoi ordini, salvare le tue stampe preferite e
+          riprendere i progetti dove li avevi lasciati.
+        </p>
+      </div>
 
       <form class="auth-form" id="loginForm">
         <div class="form-group">
-          <label for="loginEmail">Email</label>
+          <label for="loginEmail">*Email</label>
           <input
             type="email"
             id="loginEmail"
@@ -28,11 +20,12 @@
             placeholder="nome@esempio.it"
             required
           />
+          <span class="field-error" id="loginEmailError"></span>
         </div>
 
         <div class="form-group password-input-wrapper">
           <div class="form-label-row">
-            <label for="loginPassword">Password</label>
+            <label for="loginPassword">*Password</label>
             <a href="#" class="form-link" id="forgotPasswordLink"
               >Hai dimenticato la password?</a
             >
@@ -49,8 +42,13 @@
             class="password-toggle"
             data-target="loginPassword"
           >
-            <span class="eye-icon">👁️</span>
+            <img
+              src="img/pw_nascosta.png"
+              alt="mostra password"
+              class="eye-icon"
+            />
           </button>
+          <span class="field-error" id="loginPasswordError"></span>
         </div>
 
         <div class="form-row">
@@ -67,6 +65,15 @@
           <a href="/registrazione" data-link class="form-link">Registrati</a>
         </p>
       </form>
+
+      <div class="auth-benefits">
+        <p class="benefits-title">Cosa puoi fare con il tuo account:</p>
+        <ul class="auth-points">
+          <li>✔ Storico ordini sempre disponibile</li>
+          <li>✔ Indirizzi e metodi di pagamento salvati</li>
+          <li>✔ Accesso rapido alle tue grafiche</li>
+        </ul>
+      </div>
     </div>
   </div>
 </div>
@@ -93,10 +100,11 @@
             readonly
             required
           />
+          <span class="field-error" id="resetEmailError"></span>
         </div>
 
-        <div class="form-group">
-          <label for="resetNewPassword">Nuova Password</label>
+        <div class="form-group password-input-wrapper">
+          <label for="resetNewPassword">*Nuova Password</label>
           <input
             type="password"
             id="resetNewPassword"
@@ -105,10 +113,22 @@
             required
             minlength="6"
           />
+          <button
+            type="button"
+            class="password-toggle"
+            data-target="resetNewPassword"
+          >
+            <img
+              src="img/pw_nascosta.png"
+              alt="Mostra password"
+              class="eye-icon"
+            />
+          </button>
+          <span class="field-error" id="resetNewPasswordError"></span>
         </div>
 
-        <div class="form-group">
-          <label for="resetConfirmPassword">Conferma Password</label>
+        <div class="form-group password-input-wrapper">
+          <label for="resetConfirmPassword">*Conferma Password</label>
           <input
             type="password"
             id="resetConfirmPassword"
@@ -117,6 +137,18 @@
             required
             minlength="6"
           />
+          <button
+            type="button"
+            class="password-toggle"
+            data-target="resetConfirmPassword"
+          >
+            <img
+              src="img/pw_nascosta.png"
+              alt="Mostra password"
+              class="eye-icon"
+            />
+          </button>
+          <span class="field-error" id="resetConfirmPasswordError"></span>
         </div>
 
         <div class="form-actions">

@@ -59,20 +59,18 @@ function displayFavorites(preferiti) {
   preferiti.forEach((product) => {
     // Gestisce immagine
     let imageStyle = "";
-    if (product.image_path && product.image_path.includes("pinterest.com")) {
-      const colors = [
-        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-        "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-        "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-        "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-        "linear-gradient(135deg, #30cfd0 0%, #330867 100%)",
-      ];
-      const colorIndex = product.id % colors.length;
-      imageStyle = `background: ${colors[colorIndex]};`;
-    } else if (product.image_path) {
-      imageStyle = `background-image: linear-gradient(135deg, rgba(5, 8, 22, 0.4), transparent), url('${product.image_path}');`;
+
+    if (product.image_path && product.image_path.trim() !== "") {
+      // 1. Percorso base globale
+      const basePath = window.image_path || "/progetto_TecWeb/img/";
+
+      // 3. Percorso completo
+      const fullPath = image_path + product.image_path;
+
+      // 4. Stile con gradiente scuro (per leggere meglio il testo bianco) + immagine
+      imageStyle = `background-image: linear-gradient(135deg, rgba(5, 8, 22, 0.4), transparent), url('${fullPath}'); background-size: cover; background-position: center;`;
     } else {
+      // Fallback se non c'è immagine
       imageStyle =
         "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);";
     }
@@ -109,7 +107,6 @@ function displayFavorites(preferiti) {
   html += "</div>";
   container.innerHTML = html;
 }
-
 // CAMBIATA: ora manda JSON (non FormData) a api/user/manage_preferiti.php
 function removeFavorite(productId) {
   fetch("api/user/manage_preferiti.php", {

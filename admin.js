@@ -4,6 +4,11 @@ let currentUser = null;
 let allProducts = [];
 let allUsers = [];
 let allCategories = [];
+let productToDeleteId = null; //per eliminare prodotto
+let userToBlockId = null; //per bloccare utente
+let blockStatus = null;
+let userToToggleRoleId = null; //per cambiare ruolo
+let roleTarget = null;
 
 // Funzione di inizializzazione principale
 async function initAdminPage() {
@@ -46,6 +51,9 @@ async function initAdminPage() {
   await loadDashboardData();
   setupNavigation();
   setupProductForm();
+  setupDeleteModal();
+  setupBlockUserModal();
+  setupAdminRoleModal();
 }
 
 // Esponi globalmente per la SPA
@@ -235,21 +243,223 @@ function setupProductForm() {
     return;
   }
 
-  // Rimuove eventuali listener precedenti per evitare duplicati
-  const newProductForm = productForm.cloneNode(true);
-  productForm.parentNode.replaceChild(newProductForm, productForm);
+  // Funzioni di validazione
+  function validateRequired(value, fieldName) {
+    if (!value || value.trim() === "") {
+      return `${fieldName} è obbligatorio`;
+    }
+    return "";
+  }
 
-  newProductForm.addEventListener("submit", async (e) => {
+  function validatePrezzo(value) {
+    if (!value) return "Il prezzo è obbligatorio";
+    const prezzo = parseFloat(value);
+    if (isNaN(prezzo) || prezzo <= 0) {
+      return "Inserisci un prezzo valido maggiore di 0";
+    }
+    return "";
+  }
+
+  function showFieldError(input, errorSpan, message) {
+    if (!input || !errorSpan) return;
+
+    if (message) {
+      input.classList.add("input-error");
+      input.classList.remove("input-success");
+      errorSpan.textContent = message;
+      errorSpan.style.display = "block";
+    } else {
+      input.classList.remove("input-error");
+      input.classList.add("input-success");
+      errorSpan.textContent = "";
+      errorSpan.style.display = "none";
+    }
+  }
+
+  // Gestisci eventi del form
+  function attachFormValidation() {
+    // Elementi del form
+    const titoloInput = document.getElementById("product-titolo");
+    const descrizioneInput = document.getElementById("product-descrizione");
+    const autoreInput = document.getElementById("product-autore");
+    const prezzoInput = document.getElementById("product-prezzo");
+    const imageInput = document.getElementById("product-image");
+    const categoriaInput = document.getElementById("product-categoria");
+
+    const titoloError = document.getElementById("productTitoloError");
+    const descrizioneError = document.getElementById("productDescrizioneError");
+    const autoreError = document.getElementById("productAutoreError");
+    const prezzoError = document.getElementById("productPrezzoError");
+    const imageError = document.getElementById("productImageError");
+    const categoriaError = document.getElementById("productCategoriaError");
+
+    if (
+      !titoloInput ||
+      !descrizioneInput ||
+      !autoreInput ||
+      !prezzoInput ||
+      !imageInput ||
+      !categoriaInput
+    ) {
+      console.warn("⚠️ Alcuni campi del form non sono stati trovati");
+      return;
+    }
+
+    // Validazione in tempo reale per tutti i campi
+    titoloInput.addEventListener("blur", () => {
+      const error = validateRequired(titoloInput.value, "Il titolo");
+      showFieldError(titoloInput, titoloError, error);
+    });
+
+    titoloInput.addEventListener("input", () => {
+      if (titoloInput.classList.contains("input-error")) {
+        const error = validateRequired(titoloInput.value, "Il titolo");
+        showFieldError(titoloInput, titoloError, error);
+      }
+    });
+
+    descrizioneInput.addEventListener("blur", () => {
+      const error = validateRequired(descrizioneInput.value, "La descrizione");
+      showFieldError(descrizioneInput, descrizioneError, error);
+    });
+
+    descrizioneInput.addEventListener("input", () => {
+      if (descrizioneInput.classList.contains("input-error")) {
+        const error = validateRequired(
+          descrizioneInput.value,
+          "La descrizione",
+        );
+        showFieldError(descrizioneInput, descrizioneError, error);
+      }
+    });
+
+    autoreInput.addEventListener("blur", () => {
+      const error = validateRequired(autoreInput.value, "L'autore");
+      showFieldError(autoreInput, autoreError, error);
+    });
+
+    autoreInput.addEventListener("input", () => {
+      if (autoreInput.classList.contains("input-error")) {
+        const error = validateRequired(autoreInput.value, "L'autore");
+        showFieldError(autoreInput, autoreError, error);
+      }
+    });
+
+    prezzoInput.addEventListener("blur", () => {
+      const error = validatePrezzo(prezzoInput.value);
+      showFieldError(prezzoInput, prezzoError, error);
+    });
+
+    prezzoInput.addEventListener("input", () => {
+      if (prezzoInput.classList.contains("input-error")) {
+        const error = validatePrezzo(prezzoInput.value);
+        showFieldError(prezzoInput, prezzoError, error);
+      }
+    });
+
+    // Validazione in tempo reale per immagine
+    imageInput.addEventListener("blur", () => {
+      const error = validateRequired(imageInput.value, "Il percorso immagine");
+      showFieldError(imageInput, imageError, error);
+    });
+
+    imageInput.addEventListener("input", () => {
+      if (imageInput.classList.contains("input-error")) {
+        const error = validateRequired(
+          imageInput.value,
+          "Il percorso immagine",
+        );
+        showFieldError(imageInput, imageError, error);
+      }
+    });
+
+    // Validazione in tempo reale per categoria
+    categoriaInput.addEventListener("blur", () => {
+      const error = validateRequired(categoriaInput.value, "La categoria");
+      showFieldError(categoriaInput, categoriaError, error);
+    });
+
+    categoriaInput.addEventListener("change", () => {
+      const error = validateRequired(categoriaInput.value, "La categoria");
+      showFieldError(categoriaInput, categoriaError, error);
+    });
+  }
+
+  // Attacca i listener inizialmente
+  attachFormValidation();
+
+  // Gestione submit del form
+  productForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const productId = document.getElementById("product-id").value;
+    const titolo = document.getElementById("product-titolo").value.trim();
+    const descrizione = document
+      .getElementById("product-descrizione")
+      .value.trim();
+    const autore = document.getElementById("product-autore").value.trim();
+    const prezzo = document.getElementById("product-prezzo").value;
+    const imagePath = document.getElementById("product-image").value.trim();
+    const idCategoria = document.getElementById("product-categoria").value;
+
+    // Validazione finale
+    const titoloErr = validateRequired(titolo, "Il titolo");
+    const descrizioneErr = validateRequired(descrizione, "La descrizione");
+    const autoreErr = validateRequired(autore, "L'autore");
+    const prezzoErr = validatePrezzo(prezzo);
+    const imageErr = validateRequired(imagePath, "Il percorso immagine");
+    const categoriaErr = validateRequired(idCategoria, "La categoria");
+
+    showFieldError(
+      document.getElementById("product-titolo"),
+      document.getElementById("productTitoloError"),
+      titoloErr,
+    );
+    showFieldError(
+      document.getElementById("product-descrizione"),
+      document.getElementById("productDescrizioneError"),
+      descrizioneErr,
+    );
+    showFieldError(
+      document.getElementById("product-autore"),
+      document.getElementById("productAutoreError"),
+      autoreErr,
+    );
+    showFieldError(
+      document.getElementById("product-prezzo"),
+      document.getElementById("productPrezzoError"),
+      prezzoErr,
+    );
+    showFieldError(
+      document.getElementById("product-image"),
+      document.getElementById("productImageError"),
+      imageErr,
+    );
+    showFieldError(
+      document.getElementById("product-categoria"),
+      document.getElementById("productCategoriaError"),
+      categoriaErr,
+    );
+
+    if (
+      titoloErr ||
+      descrizioneErr ||
+      autoreErr ||
+      prezzoErr ||
+      imageErr ||
+      categoriaErr
+    ) {
+      showToast("Correggi gli errori nel form", "error");
+      return;
+    }
+
     const productData = {
-      titolo: document.getElementById("product-titolo").value,
-      descrizione: document.getElementById("product-descrizione").value,
-      autore: document.getElementById("product-autore").value,
-      prezzo: document.getElementById("product-prezzo").value,
-      image_path: document.getElementById("product-image").value,
-      id_categoria: document.getElementById("product-categoria").value || null,
+      titolo: titolo,
+      descrizione: descrizione,
+      autore: autore,
+      prezzo: prezzo,
+      image_path: imagePath,
+      id_categoria: idCategoria || null,
     };
 
     try {
@@ -286,29 +496,62 @@ function setupProductForm() {
     }
   });
 }
+
+//ELIMINA PRODOTTO
+//funzione per eliminare prodotto
 async function deleteProduct(productId) {
-  if (!confirm("Sei sicuro di voler eliminare questo prodotto?")) return;
+  //salva id dentro variabile dichiarata all'inizio
+  productToDeleteId = productId;
 
-  try {
-    const response = await fetch("api/admin/prodotti.php", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: productId }),
-    });
+  //apre modale
+  const modal = document.getElementById("deleteConfirmModal");
+  modal.classList.add("show"); // Opzionale se usi classi per animazioni
+  modal.style.display = "flex"; //per centrarla bene
+}
 
-    const data = await response.json();
+//modale di conferma per eliminare prodotto
+function setupDeleteModal() {
+  const modal = document.getElementById("deleteConfirmModal");
+  const confirmBtn = document.getElementById("confirmDeleteBtn");
+  const cancelBtn = document.getElementById("cancelDeleteBtn");
 
-    if (data.success) {
-      closeProductModal();
-      await loadProducts();
-      showToast(data.message || "Prodotto eliminato con successo!", "success");
-    } else {
-      showError("Errore: " + data.message);
+  //se schiacci conferma dentro la modale
+  confirmBtn.addEventListener("click", async () => {
+    if (productToDeleteId) {
+      //chiama la API per eliminare
+      try {
+        const response = await fetch("api/admin/prodotti.php", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: productToDeleteId }),
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          showToast("Prodotto eliminato con successo!", "success");
+          closeDeleteModal(); // Chiudi modale
+          await loadProducts(); // Ricarica tabella
+        } else {
+          showError("Errore: " + data.message);
+        }
+      } catch (error) {
+        showError("Errore durante l'eliminazione");
+      }
     }
-  } catch (error) {
-    console.error("Errore:", error);
-    showError("Errore durante l'eliminazione del prodotto");
-  }
+  });
+
+  //se schiacci annulla dentrro la modale
+  cancelBtn.addEventListener("click", closeDeleteModal);
+
+  //chiude se clicchi fuori dalla modale
+  window.addEventListener("click", (e) => {
+    if (e.target === modal) closeDeleteModal();
+  });
+}
+
+function closeDeleteModal() {
+  document.getElementById("deleteConfirmModal").style.display = "none";
+  productToDeleteId = null; // Resetta l'ID
 }
 
 // ===== GESTIONE UTENTI =====
@@ -517,59 +760,176 @@ function closeUserModal() {
   document.getElementById("userModal").style.display = "none";
 }
 
+// BLOCCO UTENTE
+//funzione per bloccare
 async function toggleBlockUser(userId, blocked) {
-  const action = blocked == 1 ? "bloccare" : "sbloccare";
-  if (!confirm(`Sei sicuro di voler ${action} questo utente?`)) return;
+  // salva dati nelle variabili globali
+  userToBlockId = userId;
+  blockStatus = blocked;
 
-  try {
-    const response = await fetch("api/admin/utenti.php", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: userId, blocked: blocked }),
-    });
+  //interfaccia modale
+  const modal = document.getElementById("blockUserConfirmModal");
+  const title = document.getElementById("blockModalTitle");
+  const msg = document.getElementById("blockModalMessage");
+  const btn = document.getElementById("confirmBlockBtn");
 
-    const data = await response.json();
-
-    if (data.success) {
-      showToast(data.message);
-      await loadUsers();
-      updateDashboardStats();
-    } else {
-      showError("Errore: " + data.message);
-    }
-  } catch (error) {
-    console.error("Errore:", error);
-    showError("Errore durante l'operazione");
+  if (blocked == 1) {
+    // se blocca
+    title.textContent = "Blocca Utente";
+    msg.textContent = "L'utente non potrà più accedere al sito. Sei sicuro?";
+    btn.textContent = "Blocca";
+    btn.className = "btn btn-danger"; // Rosso
+  } else {
+    // se sblocca
+    title.textContent = "Sblocca Utente";
+    msg.textContent = "L'utente potrà nuovamente accedere al sito. Sei sicuro?";
+    btn.textContent = "Sblocca";
+    btn.className = "btn btn-success"; // Verde (assicurati di avere questa classe nel CSS, o usa btn-primary)
   }
+
+  // mostra modale
+  modal.style.display = "flex";
 }
 
-async function toggleAdminRole(userId, ruolo) {
-  const action =
-    ruolo == 1
-      ? "rendere amministratore"
-      : "rimuovere i privilegi di amministratore a";
-  if (!confirm(`Sei sicuro di voler ${action} questo utente?`)) return;
+//modale per conferma blocco utente
+function setupBlockUserModal() {
+  const modal = document.getElementById("blockUserConfirmModal");
+  const confirmBtn = document.getElementById("confirmBlockBtn");
+  const cancelBtn = document.getElementById("cancelBlockBtn");
 
-  try {
-    const response = await fetch("api/admin/utenti.php", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: userId, ruolo: ruolo }),
-    });
+  //se schiacci conferma dentro la modale
+  confirmBtn.addEventListener("click", async () => {
+    if (userToBlockId !== null && blockStatus !== null) {
+      try {
+        const response = await fetch("api/admin/utenti.php", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: userToBlockId, blocked: blockStatus }),
+        });
 
-    const data = await response.json();
+        const data = await response.json();
 
-    if (data.success) {
-      showToast(data.message);
-      await loadUsers();
-      updateDashboardStats();
-    } else {
-      showError("Errore: " + data.message);
+        if (data.success) {
+          showToast(data.message, "success");
+          closeBlockModal(); // Chiudi modale
+          await loadUsers(); // Ricarica tabella utenti
+          updateDashboardStats(); // Aggiorna i contatori in alto
+        } else {
+          showError("Errore: " + data.message);
+        }
+      } catch (error) {
+        console.error("Errore:", error);
+        showError("Errore durante l'operazione");
+      }
     }
-  } catch (error) {
-    console.error("Errore:", error);
-    showError("Errore durante l'operazione");
+  });
+
+  //se clicchi annulla
+  cancelBtn.addEventListener("click", closeBlockModal);
+
+  //chiude cliccando fuori
+  window.addEventListener("click", (e) => {
+    if (e.target === modal) closeBlockModal();
+  });
+}
+
+function closeBlockModal() {
+  document.getElementById("blockUserConfirmModal").style.display = "none";
+  userToBlockId = null;
+  blockStatus = null;
+}
+
+// ADMIN UTENTE
+//funzione
+async function toggleAdminRole(userId, ruolo) {
+  //recupera dati utente da array
+  const user = allUsers.find((u) => u.id == userId);
+
+  //controllo: impossibile rendere admin un utente bloccato
+  if (ruolo == 1 && user && user.blocked == 1) {
+    showError(
+      "Impossibile rendere Amministratore un utente bloccato. Devi prima sbloccarlo.",
+    );
+    return;
   }
+
+  // salva dati nelle variabili globali
+  userToToggleRoleId = userId;
+  roleTarget = ruolo;
+
+  //interfaccia modale
+  const modal = document.getElementById("adminRoleConfirmModal");
+  const title = document.getElementById("adminRoleModalTitle");
+  const msg = document.getElementById("adminRoleModalMessage");
+  const btn = document.getElementById("confirmAdminRoleBtn");
+
+  if (ruolo == 1) {
+    // promuove a admin
+    title.textContent = "Promuovi ad Admin";
+    msg.textContent =
+      "Questo utente avrà accesso completo alla dashboard di amministrazione.";
+    btn.textContent = "Promuovi";
+    btn.className = "btn btn-success";
+  } else {
+    // rimuove da admin
+    title.textContent = "Rimuovi Admin";
+    msg.textContent =
+      "L'utente perderà l'accesso alla dashboard di amministrazione.";
+    btn.textContent = "Rimuovi";
+    btn.className = "btn btn-danger";
+  }
+
+  //mostra modale
+  modal.style.display = "flex";
+}
+
+//modale
+function setupAdminRoleModal() {
+  const modal = document.getElementById("adminRoleConfirmModal");
+  const confirmBtn = document.getElementById("confirmAdminRoleBtn");
+  const cancelBtn = document.getElementById("cancelAdminRoleBtn");
+
+  //se schiaccia conferma
+  confirmBtn.addEventListener("click", async () => {
+    if (userToToggleRoleId !== null && roleTarget !== null) {
+      try {
+        const response = await fetch("api/admin/utenti.php", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: userToToggleRoleId, ruolo: roleTarget }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          if (typeof showToast === "function")
+            showToast(data.message, "success");
+          closeAdminRoleModal();
+          await loadUsers(); // Ricarica la tabella
+          updateDashboardStats(); // Aggiorna i contatori
+        } else {
+          showError("Errore: " + data.message);
+        }
+      } catch (error) {
+        console.error("Errore:", error);
+        showError("Errore durante l'operazione");
+      }
+    }
+  });
+
+  // se schiaccia annulla
+  cancelBtn.addEventListener("click", closeAdminRoleModal);
+
+  // chiude se click fuori da finestra
+  window.addEventListener("click", (e) => {
+    if (e.target === modal) closeAdminRoleModal();
+  });
+}
+
+function closeAdminRoleModal() {
+  document.getElementById("adminRoleConfirmModal").style.display = "none";
+  userToToggleRoleId = null;
+  roleTarget = null;
 }
 
 // ===== NAVIGAZIONE =====

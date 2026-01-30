@@ -38,6 +38,181 @@ function initCheckoutPage() {
   let cart = [];
   const FREE_SHIPPING_THRESHOLD = 50;
 
+  // Funzioni di validazione
+  function validateRequired(value, fieldName) {
+    if (!value || value.trim() === "") {
+      return `${fieldName} è obbligatorio`;
+    }
+    return "";
+  }
+
+  function validateEmail(email) {
+    if (!email || email.trim() === "") return "L'email è obbligatoria";
+    if (!email.includes("@") || !email.includes(".")) {
+      return "Inserisci un'email valida";
+    }
+    return "";
+  }
+
+  function validateTelefono(telefono) {
+    if (!telefono || telefono.trim() === "")
+      return "Il telefono è obbligatorio";
+    const cleaned = telefono.replace(/\s/g, "");
+    if (cleaned.length < 9 || cleaned.length > 15) {
+      return "Inserisci un numero di telefono valido";
+    }
+    return "";
+  }
+
+  function validateProvincia(provincia) {
+    if (!provincia || provincia.trim() === "")
+      return "La provincia è obbligatoria";
+    if (provincia.length !== 2) {
+      return "La provincia deve essere di 2 caratteri (es. MI)";
+    }
+    return "";
+  }
+
+  function validateCap(cap) {
+    if (!cap || cap.trim() === "") return "Il CAP è obbligatorio";
+    if (cap.length !== 5 || isNaN(cap)) {
+      return "Il CAP deve essere di 5 cifre";
+    }
+    return "";
+  }
+
+  function showFieldError(input, errorSpan, message) {
+    if (message) {
+      input.classList.add("input-error");
+      input.classList.remove("input-success");
+      errorSpan.textContent = message;
+      errorSpan.style.display = "block";
+    } else {
+      input.classList.remove("input-error");
+      input.classList.add("input-success");
+      errorSpan.textContent = "";
+      errorSpan.style.display = "none";
+    }
+  }
+
+  // Elementi del form
+  const nomeInput = document.getElementById("nome");
+  const cognomeInput = document.getElementById("cognome");
+  const emailInput = document.getElementById("email");
+  const telefonoInput = document.getElementById("telefono");
+  const viaInput = document.getElementById("via");
+  const cittaInput = document.getElementById("citta");
+  const provinciaInput = document.getElementById("provincia");
+  const capInput = document.getElementById("cap");
+
+  const nomeError = document.getElementById("nomeError");
+  const cognomeError = document.getElementById("cognomeError");
+  const emailError = document.getElementById("emailError");
+  const telefonoError = document.getElementById("telefonoError");
+  const viaError = document.getElementById("viaError");
+  const cittaError = document.getElementById("cittaError");
+  const provinciaError = document.getElementById("provinciaError");
+  const capError = document.getElementById("capError");
+
+  // Validazione in tempo reale
+  nomeInput.addEventListener("blur", () => {
+    const error = validateRequired(nomeInput.value, "Il nome");
+    showFieldError(nomeInput, nomeError, error);
+  });
+
+  nomeInput.addEventListener("input", () => {
+    if (nomeInput.classList.contains("input-error")) {
+      const error = validateRequired(nomeInput.value, "Il nome");
+      showFieldError(nomeInput, nomeError, error);
+    }
+  });
+
+  cognomeInput.addEventListener("blur", () => {
+    const error = validateRequired(cognomeInput.value, "Il cognome");
+    showFieldError(cognomeInput, cognomeError, error);
+  });
+
+  cognomeInput.addEventListener("input", () => {
+    if (cognomeInput.classList.contains("input-error")) {
+      const error = validateRequired(cognomeInput.value, "Il cognome");
+      showFieldError(cognomeInput, cognomeError, error);
+    }
+  });
+
+  emailInput.addEventListener("blur", () => {
+    const error = validateEmail(emailInput.value);
+    showFieldError(emailInput, emailError, error);
+  });
+
+  emailInput.addEventListener("input", () => {
+    if (emailInput.classList.contains("input-error")) {
+      const error = validateEmail(emailInput.value);
+      showFieldError(emailInput, emailError, error);
+    }
+  });
+
+  telefonoInput.addEventListener("blur", () => {
+    const error = validateTelefono(telefonoInput.value);
+    showFieldError(telefonoInput, telefonoError, error);
+  });
+
+  telefonoInput.addEventListener("input", () => {
+    if (telefonoInput.classList.contains("input-error")) {
+      const error = validateTelefono(telefonoInput.value);
+      showFieldError(telefonoInput, telefonoError, error);
+    }
+  });
+
+  viaInput.addEventListener("blur", () => {
+    const error = validateRequired(viaInput.value, "L'indirizzo");
+    showFieldError(viaInput, viaError, error);
+  });
+
+  viaInput.addEventListener("input", () => {
+    if (viaInput.classList.contains("input-error")) {
+      const error = validateRequired(viaInput.value, "L'indirizzo");
+      showFieldError(viaInput, viaError, error);
+    }
+  });
+
+  cittaInput.addEventListener("blur", () => {
+    const error = validateRequired(cittaInput.value, "La città");
+    showFieldError(cittaInput, cittaError, error);
+  });
+
+  cittaInput.addEventListener("input", () => {
+    if (cittaInput.classList.contains("input-error")) {
+      const error = validateRequired(cittaInput.value, "La città");
+      showFieldError(cittaInput, cittaError, error);
+    }
+  });
+
+  provinciaInput.addEventListener("blur", () => {
+    const error = validateProvincia(provinciaInput.value.toUpperCase());
+    showFieldError(provinciaInput, provinciaError, error);
+  });
+
+  provinciaInput.addEventListener("input", () => {
+    // Auto uppercase
+    provinciaInput.value = provinciaInput.value.toUpperCase();
+    if (provinciaInput.classList.contains("input-error")) {
+      const error = validateProvincia(provinciaInput.value);
+      showFieldError(provinciaInput, provinciaError, error);
+    }
+  });
+
+  capInput.addEventListener("blur", () => {
+    const error = validateCap(capInput.value);
+    showFieldError(capInput, capError, error);
+  });
+
+  capInput.addEventListener("input", () => {
+    if (capInput.classList.contains("input-error")) {
+      const error = validateCap(capInput.value);
+      showFieldError(capInput, capError, error);
+    }
+  });
+
   // Carica il carrello
   function loadCart() {
     // Usa lo store invece di localStorage direttamente
@@ -133,44 +308,51 @@ function initCheckoutPage() {
   checkoutForm.addEventListener("submit", function (e) {
     e.preventDefault();
 
-    // Validazione
-    const nome = document.getElementById("nome").value.trim();
-    const cognome = document.getElementById("cognome").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const telefono = document.getElementById("telefono").value.trim();
-    const via = document.getElementById("via").value.trim();
-    const citta = document.getElementById("citta").value.trim();
-    const provincia = document
-      .getElementById("provincia")
-      .value.trim()
-      .toUpperCase();
-    const cap = document.getElementById("cap").value.trim();
+    // Validazione finale di tutti i campi
+    const nome = nomeInput.value.trim();
+    const cognome = cognomeInput.value.trim();
+    const email = emailInput.value.trim();
+    const telefono = telefonoInput.value.trim();
+    const via = viaInput.value.trim();
+    const citta = cittaInput.value.trim();
+    const provincia = provinciaInput.value.trim().toUpperCase();
+    const cap = capInput.value.trim();
     const paymentMethod = document.querySelector(
       'input[name="payment"]:checked',
     ).value;
     const note = document.getElementById("note").value.trim();
 
+    // Esegui tutte le validazioni
+    const nomeErr = validateRequired(nome, "Il nome");
+    const cognomeErr = validateRequired(cognome, "Il cognome");
+    const emailErr = validateEmail(email);
+    const telefonoErr = validateTelefono(telefono);
+    const viaErr = validateRequired(via, "L'indirizzo");
+    const cittaErr = validateRequired(citta, "La città");
+    const provinciaErr = validateProvincia(provincia);
+    const capErr = validateCap(cap);
+
+    showFieldError(nomeInput, nomeError, nomeErr);
+    showFieldError(cognomeInput, cognomeError, cognomeErr);
+    showFieldError(emailInput, emailError, emailErr);
+    showFieldError(telefonoInput, telefonoError, telefonoErr);
+    showFieldError(viaInput, viaError, viaErr);
+    showFieldError(cittaInput, cittaError, cittaErr);
+    showFieldError(provinciaInput, provinciaError, provinciaErr);
+    showFieldError(capInput, capError, capErr);
+
+    // Se ci sono errori, ferma il submit
     if (
-      !nome ||
-      !cognome ||
-      !email ||
-      !telefono ||
-      !via ||
-      !citta ||
-      !provincia ||
-      !cap
+      nomeErr ||
+      cognomeErr ||
+      emailErr ||
+      telefonoErr ||
+      viaErr ||
+      cittaErr ||
+      provinciaErr ||
+      capErr
     ) {
-      showToast("Compila tutti i campi obbligatori");
-      return;
-    }
-
-    if (provincia.length !== 2) {
-      showToast("Provincia deve essere di 2 caratteri");
-      return;
-    }
-
-    if (cap.length !== 5 || isNaN(cap)) {
-      showToast("CAP non valido");
+      showToast("Correggi gli errori nel form");
       return;
     }
 

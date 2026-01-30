@@ -1360,37 +1360,18 @@ body {
   min-height: calc(100vh - 180px);
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: 3.5rem 0;
 }
 
-.auth-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-  gap: 3rem;
+.auth-container {
+  display: flex;
+  justify-content: center;
   align-items: center;
-}
-
-.auth-intro h1 {
-  font-size: clamp(2rem, 3vw, 2.4rem);
-  margin-bottom: 0.8rem;
-}
-
-.auth-intro p {
-  color: var(--text-soft);
-  font-size: 0.95rem;
-  max-width: 440px;
-}
-
-.auth-points {
-  list-style: none;
-  padding: 0;
-  margin: 1.2rem 0 0;
-  color: var(--text-soft);
-  font-size: 0.9rem;
-}
-
-.auth-points li + li {
-  margin-top: 0.35rem;
+  width: 100%;
+  padding: 0 1.25rem;
+  max-width: 1120px;
+  margin: 0 auto;
 }
 
 .auth-card {
@@ -1398,20 +1379,56 @@ body {
   border: 1px solid var(--border-subtle);
   background: rgba(10, 14, 32, 0.96);
   box-shadow: var(--shadow-soft);
-  padding: 1.8rem 1.7rem 1.7rem;
-  max-width: 440px;
+  padding: 2.5rem 2.5rem 2rem;
+  max-width: 600px;
   width: 100%;
+  margin: 0 auto;
 }
 
-.auth-card h2 {
-  margin: 0 0 0.2rem;
-  font-size: 1.4rem;
+.auth-header {
+  text-align: center;
+  margin-bottom: 2rem;
 }
 
-.auth-subtitle {
-  margin: 0 0 1.3rem;
+.auth-header h1 {
+  font-size: clamp(1.8rem, 3vw, 2.2rem);
+  margin-bottom: 0.8rem;
+  color: var(--text-primary);
+}
+
+.auth-description {
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.auth-benefits {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-subtle);
+  text-align: center;
+}
+
+.benefits-title {
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.auth-points {
+  list-style: none;
+  padding: 0;
+  margin: 0;
   color: var(--text-soft);
   font-size: 0.9rem;
+  text-align: left;
+  display: inline-block;
+}
+
+.auth-points li + li {
+  margin-top: 0.5rem;
 }
 
 .auth-form {
@@ -1424,6 +1441,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  position: relative;
+  margin-bottom: 1.5rem; /* Spazio per l'errore posizionato assolutamente */
 }
 
 .form-group label {
@@ -1441,6 +1460,50 @@ body {
 
 .form-group input::placeholder {
   color: rgba(163, 167, 197, 0.7);
+}
+
+/* Stili per la validazione dei campi */
+.field-error {
+  position: absolute;
+  bottom: -1.3rem; /* Posizionato sotto il form-group */
+  left: 0.5rem;
+  font-size: 0.8rem;
+  color: #ff6b6b;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease;
+}
+
+.field-error:not(:empty) {
+  opacity: 1;
+  visibility: visible;
+}
+
+input.input-error,
+select.input-error,
+textarea.input-error {
+  border-color: #ff6b6b !important;
+  background-color: rgba(255, 107, 107, 0.05) !important;
+}
+
+input.input-error:focus,
+select.input-error:focus,
+textarea.input-error:focus {
+  border-color: #ff6b6b !important;
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1) !important;
+}
+
+input.input-success,
+select.input-success,
+textarea.input-success {
+  border-color: #51cf66 !important;
+}
+
+input.input-success:focus,
+select.input-success:focus,
+textarea.input-success:focus {
+  border-color: #51cf66 !important;
+  box-shadow: 0 0 0 3px rgba(81, 207, 102, 0.1) !important;
 }
 
 .form-label-row {
@@ -1501,36 +1564,42 @@ body {
 .password-input-wrapper input {
   padding-right: 45px;
   width: 100%;
+  position: relative;
 }
 
 .password-toggle {
   position: absolute;
   right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
+  bottom: 1.5rem; /* Spazio per l'errore sotto */
+  top: auto;
+  height: calc(0.6rem * 2 + 0.9rem * 1.5); /* Altezza esatta dell'input */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   cursor: pointer;
   padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: var(--text-soft);
   transition: all 0.2s ease;
-  font-size: 1.2rem;
   z-index: 10;
-  margin-top: 14px;
 }
 
 .password-toggle:hover {
   color: var(--accent);
-  transform: translateY(-50%) scale(1.1);
+  transform: scale(1.1);
 }
 
 .password-toggle .eye-icon {
+  width: 20px;
+  height: 20px;
   display: block;
+  object-fit: contain;
+  transition: all 0.3s ease;
+  opacity: 0.6;
   line-height: 1;
   user-select: none;
+  margin-top: 42px;
 }
 
 .checkbox-label {
@@ -1563,19 +1632,23 @@ body {
     padding-top: 2.5rem;
   }
 
-  .auth-grid {
-    grid-template-columns: 1fr;
-    gap: 2.2rem;
-  }
-
   .auth-card {
-    margin-inline: auto;
+    max-width: 90%;
   }
 }
 
 @media (max-width: 640px) {
   .auth-card {
-    padding-inline: 1.2rem;
+    padding: 2rem 1.5rem 1.5rem;
+    max-width: 95%;
+  }
+
+  .auth-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .auth-description {
+    font-size: 0.9rem;
   }
 
   .two-cols {

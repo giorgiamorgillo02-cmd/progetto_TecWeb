@@ -1,49 +1,44 @@
-<!-- PAGINA REGISTRAZIONE -->
+<!--PAGINA REGISTRAZIONE-->
 <div class="auth-page">
-  <div class="container auth-grid">
-    <div class="auth-intro">
-      <h1>Crea il tuo account Artly</h1>
-      <p>
-        Salva i tuoi progetti, crea wishlist e velocizza i prossimi ordini con
-        un profilo personale.
-      </p>
-      <ul class="auth-points">
-        <li>✔ Preferiti e collezioni personalizzate</li>
-        <li>✔ Notifiche su nuove stampe e offerte</li>
-        <li>✔ Gestione semplice di indirizzi e fatture</li>
-      </ul>
-    </div>
-
+  <div class="auth-container">
     <div class="auth-card">
-      <h2>Registrati</h2>
-      <p class="auth-subtitle">Ci vorranno solo pochi secondi.</p>
+      <div class="auth-header">
+        <h1>Crea il tuo account Artly</h1>
+        <p class="auth-description">
+          Salva i tuoi progetti, crea wishlist e velocizza i prossimi ordini con
+          un profilo personale.
+        </p>
+      </div>
 
       <form class="auth-form" id="registerForm">
-        <div class="form-row two-cols">
-          <div class="form-group">
-            <label for="firstName">Nome</label>
-            <input
-              type="text"
-              id="firstName"
-              name="nome"
-              placeholder="Mario"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="lastName">Cognome</label>
-            <input
-              type="text"
-              id="lastName"
-              name="cognome"
-              placeholder="Rossi"
-              required
-            />
-          </div>
+        <div class="form-group">
+          <label for="firstName">*Nome</label>
+          <input
+            type="text"
+            id="firstName"
+            name="nome"
+            placeholder="Mario"
+            required
+            style="text-transform: capitalize"
+          />
+          <span class="field-error" id="firstNameError"></span>
         </div>
 
         <div class="form-group">
-          <label for="registerEmail">Email</label>
+          <label for="lastName">*Cognome</label>
+          <input
+            type="text"
+            id="lastName"
+            name="cognome"
+            placeholder="Rossi"
+            required
+            style="text-transform: capitalize"
+          />
+          <span class="field-error" id="lastNameError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="registerEmail">*Email</label>
           <input
             type="email"
             id="registerEmail"
@@ -51,21 +46,24 @@
             placeholder="nome@esempio.it"
             required
           />
+          <span class="field-error" id="registerEmailError"></span>
         </div>
 
         <div class="form-group">
-          <label for="telefono">Telefono</label>
+          <label for="telefono">*Telefono</label>
           <input
             type="tel"
             id="telefono"
             name="telefono"
-            placeholder="+39 333 123 4567"
+            placeholder="3331234567"
+            maxlength="10"
             required
           />
+          <span class="field-error" id="telefonoError"></span>
         </div>
 
         <div class="form-group">
-          <label for="via">Indirizzo (Via e numero civico)</label>
+          <label for="via">*Indirizzo (Via e numero civico)</label>
           <input
             type="text"
             id="via"
@@ -73,85 +71,101 @@
             placeholder="Via Roma, 123"
             required
           />
+          <span class="field-error" id="viaError"></span>
         </div>
 
-        <div class="form-row three-cols">
-          <div class="form-group">
-            <label for="citta">Città</label>
-            <input
-              type="text"
-              id="citta"
-              name="citta"
-              placeholder="Milano"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="provincia">Provincia</label>
-            <input
-              type="text"
-              id="provincia"
-              name="provincia"
-              placeholder="MI"
-              maxlength="2"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="cap">CAP</label>
-            <input
-              type="text"
-              id="cap"
-              name="cap"
-              placeholder="20100"
-              maxlength="5"
-              required
-            />
-          </div>
+        <div class="form-group">
+          <label for="citta">*Città</label>
+          <input
+            type="text"
+            id="citta"
+            name="citta"
+            placeholder="Milano"
+            required
+            style="text-transform: capitalize"
+          />
+          <span class="field-error" id="cittaError"></span>
         </div>
 
-        <div class="form-row two-cols">
-          <div class="form-group password-input-wrapper">
-            <label for="registerPassword">Password</label>
-            <input
-              type="password"
-              id="registerPassword"
-              name="password"
-              placeholder="Minimo 6 caratteri"
-              required
+        <div class="form-group">
+          <label for="provincia">*Provincia</label>
+          <input
+            type="text"
+            id="provincia"
+            name="provincia"
+            placeholder="MI"
+            maxlength="2"
+            required
+            style="text-transform: uppercase"
+          />
+          <span class="field-error" id="provinciaError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="cap">*CAP</label>
+          <input
+            type="text"
+            id="cap"
+            name="cap"
+            placeholder="20100"
+            maxlength="5"
+            inputmode="numeric"
+            required
+          />
+          <span class="field-error" id="capError"></span>
+        </div>
+
+        <div class="form-group password-input-wrapper">
+          <label for="registerPassword">*Password</label>
+          <input
+            type="password"
+            id="registerPassword"
+            name="password"
+            placeholder="Minimo 6 caratteri"
+            required
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            data-target="registerPassword"
+          >
+            <img
+              src="img/pw_nascosta.png"
+              alt="Mostra password"
+              class="eye-icon"
             />
-            <button
-              type="button"
-              class="password-toggle"
-              data-target="registerPassword"
-            >
-              <span class="eye-icon">👁️</span>
-            </button>
-          </div>
-          <div class="form-group password-input-wrapper">
-            <label for="registerPasswordConfirm">Conferma password</label>
-            <input
-              type="password"
-              id="registerPasswordConfirm"
-              name="password_confirm"
-              placeholder="Ripeti la password"
-              required
+          </button>
+          <span class="field-error" id="registerPasswordError"></span>
+        </div>
+
+        <div class="form-group password-input-wrapper">
+          <label for="registerPasswordConfirm">*Conferma password</label>
+          <input
+            type="password"
+            id="registerPasswordConfirm"
+            name="password_confirm"
+            placeholder="Ripeti la password"
+            required
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            data-target="registerPasswordConfirm"
+          >
+            <img
+              src="img/pw_nascosta.png"
+              alt="Mostra password"
+              class="eye-icon"
             />
-            <button
-              type="button"
-              class="password-toggle"
-              data-target="registerPasswordConfirm"
-            >
-              <span class="eye-icon">👁️</span>
-            </button>
-          </div>
+          </button>
+          <span class="field-error" id="registerPasswordConfirmError"></span>
         </div>
 
         <div class="form-row">
           <label class="checkbox-label">
             <input type="checkbox" id="terms" required />
             <span>
-              Accetto i
+              *Accetto i
               <a href="#" class="form-link">Termini e Condizioni</a>
               e la
               <a href="#" class="form-link">Privacy Policy</a>
@@ -166,6 +180,15 @@
           <a href="/login" data-link class="form-link">Accedi</a>
         </p>
       </form>
+
+      <div class="auth-benefits">
+        <p class="benefits-title">Cosa puoi fare con il tuo account:</p>
+        <ul class="auth-points">
+          <li>✔ Preferiti e collezioni personalizzate</li>
+          <li>✔ Notifiche su nuove stampe e offerte</li>
+          <li>✔ Gestione semplice di indirizzi e fatture</li>
+        </ul>
+      </div>
     </div>
   </div>
 </div>

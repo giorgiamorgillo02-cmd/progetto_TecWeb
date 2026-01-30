@@ -279,13 +279,54 @@ function initHomeView() {
   // Newsletter form
   const newsletterForm = document.getElementById("newsletterForm");
   const newsletterEmail = document.getElementById("newsletterEmail");
+  const newsletterEmailError = document.getElementById("newsletterEmailError");
 
   if (newsletterForm && newsletterEmail) {
+    // Validazione email
+    function validateEmail(email) {
+      if (!email) return "L'email è obbligatoria";
+      if (!email.includes("@") || !email.includes(".")) {
+        return "Inserisci un'email valida";
+      }
+      return "";
+    }
+
+    function showFieldError(input, errorSpan, message) {
+      if (message) {
+        input.classList.add("error");
+        input.classList.remove("success");
+        errorSpan.textContent = message;
+      } else {
+        input.classList.remove("error");
+        input.classList.add("success");
+        errorSpan.textContent = "";
+      }
+    }
+
+    newsletterEmail.addEventListener("blur", () => {
+      const error = validateEmail(newsletterEmail.value.trim());
+      showFieldError(newsletterEmail, newsletterEmailError, error);
+    });
+
+    newsletterEmail.addEventListener("input", () => {
+      if (newsletterEmail.classList.contains("error")) {
+        const error = validateEmail(newsletterEmail.value.trim());
+        showFieldError(newsletterEmail, newsletterEmailError, error);
+      }
+    });
+
     newsletterForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      if (!newsletterEmail.value.trim()) return;
+      const email = newsletterEmail.value.trim();
+      const error = validateEmail(email);
+
+      showFieldError(newsletterEmail, newsletterEmailError, error);
+
+      if (error) return;
+
       showToast("Grazie! Controlla la tua email 📩");
       newsletterEmail.value = "";
+      newsletterEmail.classList.remove("success");
     });
   }
 
@@ -408,6 +449,34 @@ function initLoginView(params) {
   const loginBtn = document.querySelector("#loginForm .auth-btn");
   const loginEmail = document.getElementById("loginEmail");
   const loginPassword = document.getElementById("loginPassword");
+  const emailError = document.getElementById("loginEmailError");
+  const passwordError = document.getElementById("loginPasswordError");
+
+  // Validazione in tempo reale per email
+  loginEmail.addEventListener("blur", () => {
+    const error = validateEmail(loginEmail.value);
+    showFieldError(loginEmail, emailError, error);
+  });
+
+  loginEmail.addEventListener("input", () => {
+    if (loginEmail.classList.contains("input-error")) {
+      const error = validateEmail(loginEmail.value);
+      showFieldError(loginEmail, emailError, error);
+    }
+  });
+
+  // Validazione in tempo reale per password
+  loginPassword.addEventListener("blur", () => {
+    const error = validateRequired(loginPassword.value, "La password");
+    showFieldError(loginPassword, passwordError, error);
+  });
+
+  loginPassword.addEventListener("input", () => {
+    if (loginPassword.classList.contains("input-error")) {
+      const error = validateRequired(loginPassword.value, "La password");
+      showFieldError(loginPassword, passwordError, error);
+    }
+  });
 
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -415,13 +484,15 @@ function initLoginView(params) {
     const email = loginEmail.value.trim();
     const password = loginPassword.value.trim();
 
-    if (!email || !password) {
-      showMessage("Inserisci email e password", "error");
-      return;
-    }
+    // Validazione completa
+    const emailErr = validateEmail(email);
+    const passwordErr = validateRequired(password, "La password");
 
-    if (!email.includes("@")) {
-      showMessage("Email non valida", "error");
+    showFieldError(loginEmail, emailError, emailErr);
+    showFieldError(loginPassword, passwordError, passwordErr);
+
+    if (emailErr || passwordErr) {
+      showMessage("Compila correttamente tutti i campi", "error");
       return;
     }
 
@@ -482,70 +553,294 @@ function initRegistrazioneView() {
   const registerForm = document.getElementById("registerForm");
   if (!registerForm) return;
 
+  // Elementi del form
+  const firstName = document.getElementById("firstName");
+  const lastName = document.getElementById("lastName");
+  const registerEmail = document.getElementById("registerEmail");
+  const telefono = document.getElementById("telefono");
+  const via = document.getElementById("via");
+  const citta = document.getElementById("citta");
+  const provincia = document.getElementById("provincia");
+  const cap = document.getElementById("cap");
+  const registerPassword = document.getElementById("registerPassword");
+  const registerPasswordConfirm = document.getElementById(
+    "registerPasswordConfirm",
+  );
+
+  // Span errori
+  const firstNameError = document.getElementById("firstNameError");
+  const lastNameError = document.getElementById("lastNameError");
+  const emailError = document.getElementById("registerEmailError");
+  const telefonoError = document.getElementById("telefonoError");
+  const viaError = document.getElementById("viaError");
+  const cittaError = document.getElementById("cittaError");
+  const provinciaError = document.getElementById("provinciaError");
+  const capError = document.getElementById("capError");
+  const passwordError = document.getElementById("registerPasswordError");
+  const passwordConfirmError = document.getElementById(
+    "registerPasswordConfirmError",
+  );
+
+  let emailCheckTimeout;
+
+  // Validazione in tempo reale - Nome
+  firstName.addEventListener("blur", () => {
+    const error = validateRequired(firstName.value, "Il nome");
+    showFieldError(firstName, firstNameError, error);
+  });
+
+  firstName.addEventListener("input", () => {
+    if (firstName.classList.contains("input-error")) {
+      const error = validateRequired(firstName.value, "Il nome");
+      showFieldError(firstName, firstNameError, error);
+    }
+  });
+
+  // Validazione in tempo reale - Cognome
+  lastName.addEventListener("blur", () => {
+    const error = validateRequired(lastName.value, "Il cognome");
+    showFieldError(lastName, lastNameError, error);
+  });
+
+  lastName.addEventListener("input", () => {
+    if (lastName.classList.contains("input-error")) {
+      const error = validateRequired(lastName.value, "Il cognome");
+      showFieldError(lastName, lastNameError, error);
+    }
+  });
+
+  // Validazione in tempo reale - Email con controllo esistenza
+  registerEmail.addEventListener("blur", async () => {
+    const email = registerEmail.value.trim();
+    const error = validateEmail(email);
+
+    showFieldError(registerEmail, emailError, error);
+
+    if (!error) {
+      // Se il formato è valido, verifica se l'email esiste già
+      const exists = await checkEmailExists(email);
+      if (exists) {
+        showFieldError(
+          registerEmail,
+          emailError,
+          "Questa email è già registrata",
+        );
+      }
+    }
+  });
+
+  registerEmail.addEventListener("input", () => {
+    clearTimeout(emailCheckTimeout);
+
+    if (registerEmail.classList.contains("input-error")) {
+      emailCheckTimeout = setTimeout(async () => {
+        const email = registerEmail.value.trim();
+        const error = validateEmail(email);
+
+        showFieldError(registerEmail, emailError, error);
+
+        if (!error) {
+          // Se il formato è valido, verifica se l'email esiste già
+          const exists = await checkEmailExists(email);
+          if (exists) {
+            showFieldError(
+              registerEmail,
+              emailError,
+              "Questa email è già registrata",
+            );
+          }
+        }
+      }, 500);
+    }
+  });
+
+  // Validazione in tempo reale - Telefono
+  telefono.addEventListener("blur", () => {
+    const error = validateTelefono(telefono.value);
+    showFieldError(telefono, telefonoError, error);
+  });
+
+  telefono.addEventListener("input", () => {
+    if (telefono.classList.contains("input-error")) {
+      const error = validateTelefono(telefono.value);
+      showFieldError(telefono, telefonoError, error);
+    }
+  });
+
+  // Validazione in tempo reale - Via
+  via.addEventListener("blur", () => {
+    const error = validateRequired(via.value, "L'indirizzo");
+    showFieldError(via, viaError, error);
+  });
+
+  via.addEventListener("input", () => {
+    if (via.classList.contains("input-error")) {
+      const error = validateRequired(via.value, "L'indirizzo");
+      showFieldError(via, viaError, error);
+    }
+  });
+
+  // Validazione in tempo reale - Città
+  citta.addEventListener("blur", () => {
+    const error = validateRequired(citta.value, "La città");
+    showFieldError(citta, cittaError, error);
+  });
+
+  citta.addEventListener("input", () => {
+    if (citta.classList.contains("input-error")) {
+      const error = validateRequired(citta.value, "La città");
+      showFieldError(citta, cittaError, error);
+    }
+  });
+
+  // Validazione in tempo reale - Provincia
+  provincia.addEventListener("blur", () => {
+    const error = validateProvincia(provincia.value);
+    showFieldError(provincia, provinciaError, error);
+  });
+
+  provincia.addEventListener("input", () => {
+    provincia.value = provincia.value.toUpperCase();
+    if (provincia.classList.contains("input-error")) {
+      const error = validateProvincia(provincia.value);
+      showFieldError(provincia, provinciaError, error);
+    }
+  });
+
+  // Validazione in tempo reale - CAP
+  cap.addEventListener("blur", () => {
+    const error = validateCap(cap.value);
+    showFieldError(cap, capError, error);
+  });
+
+  cap.addEventListener("input", () => {
+    if (cap.classList.contains("input-error")) {
+      const error = validateCap(cap.value);
+      showFieldError(cap, capError, error);
+    }
+  });
+
+  // Validazione in tempo reale - Password
+  registerPassword.addEventListener("blur", () => {
+    const error = validatePassword(registerPassword.value);
+    showFieldError(registerPassword, passwordError, error);
+  });
+
+  registerPassword.addEventListener("input", () => {
+    if (registerPassword.classList.contains("input-error")) {
+      const error = validatePassword(registerPassword.value);
+      showFieldError(registerPassword, passwordError, error);
+    }
+    // Rivalidare conferma password se già compilata
+    if (registerPasswordConfirm.value) {
+      const confirmError = validatePasswordConfirm(
+        registerPassword.value,
+        registerPasswordConfirm.value,
+      );
+      showFieldError(
+        registerPasswordConfirm,
+        passwordConfirmError,
+        confirmError,
+      );
+    }
+  });
+
+  // Validazione in tempo reale - Conferma Password
+  registerPasswordConfirm.addEventListener("blur", () => {
+    const error = validatePasswordConfirm(
+      registerPassword.value,
+      registerPasswordConfirm.value,
+    );
+    showFieldError(registerPasswordConfirm, passwordConfirmError, error);
+  });
+
+  registerPasswordConfirm.addEventListener("input", () => {
+    if (registerPasswordConfirm.classList.contains("input-error")) {
+      const error = validatePasswordConfirm(
+        registerPassword.value,
+        registerPasswordConfirm.value,
+      );
+      showFieldError(registerPasswordConfirm, passwordConfirmError, error);
+    }
+  });
+
   registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const nome = document.getElementById("firstName").value.trim();
-    const cognome = document.getElementById("lastName").value.trim();
-    const mail = document.getElementById("registerEmail").value.trim();
-    const telefono = document.getElementById("telefono").value.trim();
-    const via = document.getElementById("via").value.trim();
-    const citta = document.getElementById("citta").value.trim();
-    const provincia = document
-      .getElementById("provincia")
-      .value.trim()
-      .toUpperCase();
-    const cap = document.getElementById("cap").value.trim();
-    const password = document.getElementById("registerPassword").value;
-    const passwordConfirm = document.getElementById(
-      "registerPasswordConfirm",
-    ).value;
+    const nome = firstName.value.trim();
+    const cognome = lastName.value.trim();
+    const mail = registerEmail.value.trim();
+    const tel = telefono.value.trim();
+    const viaVal = via.value.trim();
+    const cittaVal = citta.value.trim();
+    const provinciaVal = provincia.value.trim().toUpperCase();
+    const capVal = cap.value.trim();
+    const password = registerPassword.value;
+    const passwordConfirm = registerPasswordConfirm.value;
     const terms = document.getElementById("terms").checked;
 
     const registerBtn = document.querySelector("#registerForm .auth-btn");
+
+    // Validazione completa
+    const nomeErr = validateRequired(nome, "Il nome");
+    const cognomeErr = validateRequired(cognome, "Il cognome");
+    const emailErr = validateEmail(mail);
+    const telefonoErr = validateTelefono(tel);
+    const viaErr = validateRequired(viaVal, "L'indirizzo");
+    const cittaErr = validateRequired(cittaVal, "La città");
+    const provinciaErr = validateProvincia(provinciaVal);
+    const capErr = validateCap(capVal);
+    const passwordErr = validatePassword(password);
+    const passwordConfirmErr = validatePasswordConfirm(
+      password,
+      passwordConfirm,
+    );
+
+    showFieldError(firstName, firstNameError, nomeErr);
+    showFieldError(lastName, lastNameError, cognomeErr);
+    showFieldError(registerEmail, emailError, emailErr);
+    showFieldError(telefono, telefonoError, telefonoErr);
+    showFieldError(via, viaError, viaErr);
+    showFieldError(citta, cittaError, cittaErr);
+    showFieldError(provincia, provinciaError, provinciaErr);
+    showFieldError(cap, capError, capErr);
+    showFieldError(registerPassword, passwordError, passwordErr);
+    showFieldError(
+      registerPasswordConfirm,
+      passwordConfirmError,
+      passwordConfirmErr,
+    );
+
+    if (
+      nomeErr ||
+      cognomeErr ||
+      emailErr ||
+      telefonoErr ||
+      viaErr ||
+      cittaErr ||
+      provinciaErr ||
+      capErr ||
+      passwordErr ||
+      passwordConfirmErr
+    ) {
+      showMessage("Correggi gli errori nel form", "error");
+      return;
+    }
 
     if (!terms) {
       showMessage("Accetta i termini e condizioni", "error");
       return;
     }
 
-    if (
-      !nome ||
-      !cognome ||
-      !mail ||
-      !telefono ||
-      !via ||
-      !citta ||
-      !provincia ||
-      !cap ||
-      !password
-    ) {
-      showMessage("Compila tutti i campi", "error");
-      return;
-    }
-
-    if (!mail.includes("@")) {
-      showMessage("Email non valida", "error");
-      return;
-    }
-
-    if (provincia.length !== 2) {
-      showMessage("Provincia deve essere di 2 caratteri (es. MI)", "error");
-      return;
-    }
-
-    if (cap.length !== 5 || isNaN(cap)) {
-      showMessage("CAP non valido (5 cifre)", "error");
-      return;
-    }
-
-    if (password !== passwordConfirm) {
-      showMessage("Le password non coincidono", "error");
-      return;
-    }
-
-    if (password.length < 6) {
-      showMessage("Password troppo corta (min 6 caratteri)", "error");
+    // Verifica finale che l'email non sia già registrata
+    const emailExists = await checkEmailExists(mail);
+    if (emailExists) {
+      showFieldError(
+        registerEmail,
+        emailError,
+        "Questa email è già registrata",
+      );
+      showMessage("Questa email è già registrata", "error");
       return;
     }
 
@@ -561,11 +856,11 @@ function initRegistrazioneView() {
           nome: nome,
           cognome: cognome,
           mail: mail,
-          telefono: telefono,
-          via: via,
-          citta: citta,
-          provincia: provincia,
-          cap: cap,
+          telefono: tel,
+          via: viaVal,
+          citta: cittaVal,
+          provincia: provinciaVal,
+          cap: capVal,
           password: password,
           password_confirm: passwordConfirm,
         }),
@@ -685,13 +980,104 @@ function setupForgotPasswordModal() {
 
   if (!forgotLink || !modal) return;
 
+  const resetEmail = document.getElementById("resetEmail");
+  const resetNewPassword = document.getElementById("resetNewPassword");
+  const resetConfirmPassword = document.getElementById("resetConfirmPassword");
+  const resetEmailError = document.getElementById("resetEmailError");
+  const resetNewPasswordError = document.getElementById(
+    "resetNewPasswordError",
+  );
+  const resetConfirmPasswordError = document.getElementById(
+    "resetConfirmPasswordError",
+  );
+
+  // Funzioni di validazione
+  function validateEmail(email) {
+    if (!email) return "L'email è obbligatoria";
+    if (!email.includes("@") || !email.includes(".")) {
+      return "Inserisci un'email valida";
+    }
+    return "";
+  }
+
+  function validatePassword(password) {
+    if (!password) return "La password è obbligatoria";
+    if (password.length < 6) {
+      return "La password deve essere di almeno 6 caratteri";
+    }
+    return "";
+  }
+
+  function validatePasswordConfirm(password, passwordConfirm) {
+    if (!passwordConfirm) return "Conferma la password";
+    if (password !== passwordConfirm) {
+      return "Le password non coincidono";
+    }
+    return "";
+  }
+
+  function showFieldError(input, errorSpan, message) {
+    if (message) {
+      input.classList.add("input-error");
+      input.classList.remove("input-success");
+      errorSpan.textContent = message;
+      errorSpan.style.display = "block";
+    } else {
+      input.classList.remove("input-error");
+      input.classList.add("input-success");
+      errorSpan.textContent = "";
+      errorSpan.style.display = "none";
+    }
+  }
+
+  // Validazione in tempo reale
+  resetNewPassword.addEventListener("blur", () => {
+    const error = validatePassword(resetNewPassword.value);
+    showFieldError(resetNewPassword, resetNewPasswordError, error);
+  });
+
+  resetNewPassword.addEventListener("input", () => {
+    if (resetNewPassword.classList.contains("input-error")) {
+      const error = validatePassword(resetNewPassword.value);
+      showFieldError(resetNewPassword, resetNewPasswordError, error);
+    }
+    // Ricontrolla la conferma se già validata
+    if (
+      resetConfirmPassword.value &&
+      resetConfirmPassword.classList.contains("input-error")
+    ) {
+      const error = validatePasswordConfirm(
+        resetNewPassword.value,
+        resetConfirmPassword.value,
+      );
+      showFieldError(resetConfirmPassword, resetConfirmPasswordError, error);
+    }
+  });
+
+  resetConfirmPassword.addEventListener("blur", () => {
+    const error = validatePasswordConfirm(
+      resetNewPassword.value,
+      resetConfirmPassword.value,
+    );
+    showFieldError(resetConfirmPassword, resetConfirmPasswordError, error);
+  });
+
+  resetConfirmPassword.addEventListener("input", () => {
+    if (resetConfirmPassword.classList.contains("input-error")) {
+      const error = validatePasswordConfirm(
+        resetNewPassword.value,
+        resetConfirmPassword.value,
+      );
+      showFieldError(resetConfirmPassword, resetConfirmPasswordError, error);
+    }
+  });
+
   // Apri modal e precompila email
   forgotLink.addEventListener("click", (e) => {
     e.preventDefault();
 
     // Precompila l'email se presente nel form di login
     const loginEmail = document.getElementById("loginEmail");
-    const resetEmail = document.getElementById("resetEmail");
     if (loginEmail && resetEmail && loginEmail.value.trim()) {
       resetEmail.value = loginEmail.value.trim();
     }
@@ -703,6 +1089,17 @@ function setupForgotPasswordModal() {
   const closeModal = () => {
     modal.style.display = "none";
     form.reset();
+    // Rimuovi classi di errore/successo
+    [resetEmail, resetNewPassword, resetConfirmPassword].forEach((input) => {
+      input.classList.remove("input-error", "input-success");
+    });
+    // Pulisci messaggi di errore
+    [resetEmailError, resetNewPasswordError, resetConfirmPasswordError].forEach(
+      (span) => {
+        span.textContent = "";
+        span.style.display = "none";
+      },
+    );
     document.getElementById("resetErrorMessage").style.display = "none";
     document.getElementById("resetSuccessMessage").style.display = "none";
   };
@@ -723,28 +1120,24 @@ function setupForgotPasswordModal() {
     errorMsg.style.display = "none";
     successMsg.style.display = "none";
 
-    const email = document.getElementById("resetEmail").value.trim();
-    const newPassword = document.getElementById("resetNewPassword").value;
-    const confirmPassword = document.getElementById(
-      "resetConfirmPassword",
-    ).value;
+    const email = resetEmail.value.trim();
+    const newPassword = resetNewPassword.value;
+    const confirmPassword = resetConfirmPassword.value;
 
-    // Validazione
-    if (!email || !email.includes("@")) {
-      errorMsg.textContent = "Inserisci un'email valida";
-      errorMsg.style.display = "block";
-      return;
-    }
+    // Validazione finale
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(newPassword);
+    const confirmError = validatePasswordConfirm(newPassword, confirmPassword);
 
-    if (newPassword.length < 6) {
-      errorMsg.textContent = "La password deve essere di almeno 6 caratteri";
-      errorMsg.style.display = "block";
-      return;
-    }
+    showFieldError(resetEmail, resetEmailError, emailError);
+    showFieldError(resetNewPassword, resetNewPasswordError, passwordError);
+    showFieldError(
+      resetConfirmPassword,
+      resetConfirmPasswordError,
+      confirmError,
+    );
 
-    if (newPassword !== confirmPassword) {
-      errorMsg.textContent = "Le password non coincidono";
-      errorMsg.style.display = "block";
+    if (emailError || passwordError || confirmError) {
       return;
     }
 
