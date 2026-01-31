@@ -1,0 +1,294 @@
+<!-- PROFILO SECTION -->
+<section class="profile-section">
+  <div class="container">
+    <h1 class="profile-title">Il mio profilo</h1>
+
+    <!-- DATI PERSONALI -->
+    <div class="profile-card">
+      <div class="profile-card-header">
+        <h2>Informazioni personali</h2>
+        <div class="profile-actions">
+          <button
+            class="edit-profile-btn"
+            id="editProfileBtn"
+            title="Modifica informazioni"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+              ></path>
+              <path
+                d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+              ></path>
+            </svg>
+          </button>
+          <button
+            class="edit-profile-btn"
+            id="changePasswordBtn"
+            title="Cambia password"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="profile-card-body">
+        <div class="profile-info-grid">
+          <div class="profile-info-item">
+            <span class="profile-info-label">Nome</span>
+            <span class="profile-info-value" id="userNome">-</span>
+          </div>
+          <div class="profile-info-item">
+            <span class="profile-info-label">Cognome</span>
+            <span class="profile-info-value" id="userCognome">-</span>
+          </div>
+          <div class="profile-info-item">
+            <span class="profile-info-label">Email</span>
+            <span class="profile-info-value" id="userEmail">-</span>
+          </div>
+          <div class="profile-info-item">
+            <span class="profile-info-label">Telefono</span>
+            <span class="profile-info-value" id="userTelefono">-</span>
+          </div>
+          <div class="profile-info-item">
+            <span class="profile-info-label">Indirizzo</span>
+            <span class="profile-info-value" id="userIndirizzo">-</span>
+          </div>
+          <div class="profile-info-item">
+            <span class="profile-info-label">Città</span>
+            <span class="profile-info-value" id="userCitta">-</span>
+          </div>
+          <div class="profile-info-item">
+            <span class="profile-info-label">Provincia</span>
+            <span class="profile-info-value" id="userProvincia">-</span>
+          </div>
+          <div class="profile-info-item">
+            <span class="profile-info-label">CAP</span>
+            <span class="profile-info-value" id="userCap">-</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STORICO ORDINI -->
+    <div class="profile-card">
+      <div class="profile-card-header">
+        <h2>I miei ordini</h2>
+      </div>
+      <div class="profile-card-body">
+        <div id="ordersContainer">
+          <div class="loading-spinner">Caricamento ordini...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODALE MODIFICA PROFILO -->
+<div class="modal" id="editProfileModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Modifica informazioni personali</h2>
+      <button class="modal-close" id="closeEditModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="editProfileForm">
+        <div class="form-group">
+          <label for="editNome">Nome *</label>
+          <input type="text" id="editNome" name="nome" required />
+          <span class="field-error" id="editNomeError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="editCognome">Cognome *</label>
+          <input type="text" id="editCognome" name="cognome" required />
+          <span class="field-error" id="editCognomeError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="editEmail">Email *</label>
+          <input type="email" id="editEmail" name="mail" required />
+          <span class="field-error" id="editEmailError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="editTelefono">Telefono</label>
+          <input type="tel" id="editTelefono" name="telefono" />
+          <span class="field-error" id="editTelefonoError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="editVia">Indirizzo</label>
+          <input
+            type="text"
+            id="editVia"
+            name="via"
+            placeholder="Via, numero civico"
+          />
+          <span class="field-error" id="editViaError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="editCitta">Città</label>
+          <input type="text" id="editCitta" name="citta" />
+          <span class="field-error" id="editCittaError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="editProvincia">Provincia</label>
+          <input
+            type="text"
+            id="editProvincia"
+            name="provincia"
+            maxlength="2"
+            placeholder="Es: MI"
+          />
+          <span class="field-error" id="editProvinciaError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="editCap">CAP</label>
+          <input type="text" id="editCap" name="cap" maxlength="5" />
+          <span class="field-error" id="editCapError"></span>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" id="cancelEditBtn">
+            Annulla
+          </button>
+          <button type="submit" class="btn-primary">Salva modifiche</button>
+        </div>
+
+        <div
+          id="editErrorMessage"
+          class="error-message"
+          style="display: none"
+        ></div>
+        <div
+          id="editSuccessMessage"
+          class="success-message"
+          style="display: none"
+        ></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE CAMBIO PASSWORD -->
+<div class="modal" id="changePasswordModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Cambia Password</h2>
+      <button class="modal-close" id="closeChangePasswordModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-description">
+        Inserisci la tua email e la nuova password.
+      </p>
+      <form id="changePasswordForm">
+        <div class="form-group">
+          <label for="changePasswordEmail">Email</label>
+          <input
+            type="email"
+            id="changePasswordEmail"
+            name="email"
+            readonly
+            required
+          />
+        </div>
+
+        <div class="form-group password-input-wrapper">
+          <label for="changePasswordNew">Nuova Password</label>
+          <input
+            type="password"
+            id="changePasswordNew"
+            name="newPassword"
+            placeholder="Almeno 6 caratteri"
+            required
+            minlength="6"
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            data-target="changePasswordNew"
+          >
+            <img
+              src="assets/img/pw_nascosta.png"
+              alt="Mostra password"
+              class="eye-icon"
+            />
+          </button>
+          <span class="field-error" id="changePasswordNewError"></span>
+        </div>
+
+        <div class="form-group password-input-wrapper">
+          <label for="changePasswordConfirm">Conferma Password</label>
+          <input
+            type="password"
+            id="changePasswordConfirm"
+            name="confirmPassword"
+            placeholder="Ripeti la password"
+            required
+            minlength="6"
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            data-target="changePasswordConfirm"
+          >
+            <img
+              src="assets/img/pw_nascosta.png"
+              alt="Mostra password"
+              class="eye-icon"
+            />
+          </button>
+          <span class="field-error" id="changePasswordConfirmError"></span>
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn-secondary"
+            id="cancelChangePasswordBtn"
+          >
+            Annulla
+          </button>
+          <button type="submit" class="btn-primary">Cambia Password</button>
+        </div>
+
+        <div
+          id="changePasswordError"
+          class="error-message"
+          style="display: none"
+        ></div>
+        <div
+          id="changePasswordSuccess"
+          class="success-message"
+          style="display: none"
+        ></div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,14 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /progetto_TecWeb/public/
+  
+  # Gestisci le chiamate API - reindirizza a src/api/
+  RewriteRule ^api/(.*)$ ../src/api/$1 [L]
+  
+  # Se il file o la directory esistono, servili direttamente
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  
+  # Altrimenti, reindirizza tutto a index.html per SPA routing
+  RewriteRule ^(.*)$ index.html [L]
+</IfModule>

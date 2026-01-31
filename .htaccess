@@ -1,11 +1,14 @@
+# Reindirizza tutto alla cartella public/
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /progetto_TecWeb/
   
-  # Se il file o la directory esistono, servili direttamente
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
+  # Reindirizza tutto a public/ tranne le chiamate API
+  RewriteCond %{REQUEST_URI} !^/progetto_TecWeb/public/
+  RewriteCond %{REQUEST_URI} !^/progetto_TecWeb/src/api/
+  RewriteRule ^(.*)$ public/$1 [L]
   
-  # Altrimenti, reindirizza tutto a index.html
-  RewriteRule ^(.*)$ index.html [L]
+  # Le chiamate API vanno direttamente a src/api/
+  RewriteRule ^api/(.*)$ src/api/$1 [L]
 </IfModule>
