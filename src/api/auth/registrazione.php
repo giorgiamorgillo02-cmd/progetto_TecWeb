@@ -6,6 +6,29 @@ require_once __DIR__ . '/../../support/auth.php';
 
 Auth::start();
 
+// *** SUPPORT CHECK EMAIL VIA GET *** (compatibile con frontend attuale)
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['mail'])) {
+    header('Content-Type: application/json');
+    $email = trim($_GET['mail']);
+    
+    if (empty($email)) {
+        echo json_encode(['exists' => false]);
+        exit;
+    }
+    
+    try {
+        $stmt = $conn->prepare("SELECT id FROM utenti WHERE mail = ?");
+        $stmt->execute([$email]);
+        $exists = $stmt->rowCount() > 0;
+        echo json_encode(['exists' => $exists]);
+    } catch (Exception $e) {
+        echo json_encode(['exists' => false, 'error' => 'Errore server']);
+    }
+    exit;
+}
+
+// *** REGISTRAZIONE VIA POST ***
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Response::error("Metodo non valido", 405);
 }

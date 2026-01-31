@@ -101,7 +101,7 @@ function displayProductDetail(product) {
           </div>
           
           <button class="btn btn-primary btn-add-to-cart" id="addToCartBtn">
-            🛒 Aggiungi al carrello
+            Aggiungi al carrello
           </button>
         </div>
         
@@ -304,7 +304,7 @@ if (cartModal) {
 
 // Funzioni per gestire i preferiti
 function checkIfFavorite(productId) {
-  fetch("api/user/manage_preferiti.php", {
+  fetch("api/user/preferiti.php", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -330,7 +330,7 @@ function toggleFavorite(productId) {
   const heartIcon = favoriteBtn.querySelector(".heart-icon");
   const isFavorite = heartIcon.textContent === "❤️";
 
-  fetch("api/user/manage_preferiti.php", {
+  fetch("api/user/preferiti.php", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

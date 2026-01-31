@@ -100,9 +100,39 @@ class HeaderComponent {
     const mobileNav = document.getElementById("mobileNav");
 
     if (menuToggle && mobileNav) {
+      // Toggle menu mobile
       menuToggle.addEventListener("click", () => {
-        const isOpen = mobileNav.style.display === "block";
-        mobileNav.style.display = isOpen ? "none" : "block";
+        const isOpen = mobileNav.classList.contains("is-open");
+        if (isOpen) {
+          mobileNav.classList.remove("is-open");
+          menuToggle.innerHTML = "☰";
+        } else {
+          mobileNav.classList.add("is-open");
+          menuToggle.innerHTML = "✕";
+        }
+      });
+
+      // Chiudi menu quando si clicca su un link
+      mobileNav.querySelectorAll("a").forEach((link) => {
+        link.addEventListener("click", () => {
+          mobileNav.classList.remove("is-open");
+          menuToggle.innerHTML = "☰";
+        });
+      });
+
+      // Reset menu quando si ridimensiona la finestra
+      let resizeTimer;
+      window.addEventListener("resize", () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          if (window.innerWidth > 768) {
+            mobileNav.classList.remove("is-open");
+            mobileNav.style.display = "none";
+            menuToggle.innerHTML = "☰";
+          } else {
+            mobileNav.style.display = "";
+          }
+        }, 250);
       });
     }
 

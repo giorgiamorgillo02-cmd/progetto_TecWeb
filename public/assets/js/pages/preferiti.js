@@ -93,7 +93,7 @@ function displayFavorites(preferiti) {
           </div>
           <div class="favorite-card-actions">
             <button class="btn btn-sm btn-primary" onclick="addToCart(${product.id}, '${product.titolo}', '${product.autore}', ${product.prezzo}, '${product.image_path || ""}')">
-              🛒 Aggiungi al carrello
+              Aggiungi al carrello
             </button>
             <button class="btn-icon-remove" onclick="removeFavorite(${product.id})" title="Rimuovi dai preferiti">
               ❤️
@@ -107,9 +107,9 @@ function displayFavorites(preferiti) {
   html += "</div>";
   container.innerHTML = html;
 }
-// CAMBIATA: ora manda JSON (non FormData) a api/user/manage_preferiti.php
+// CAMBIATA: ora manda JSON (non FormData) a api/user/preferiti.php
 function removeFavorite(productId) {
-  fetch("api/user/manage_preferiti.php", {
+  fetch("api/user/preferiti.php", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

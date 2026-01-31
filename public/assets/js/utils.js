@@ -1,7 +1,7 @@
 // Utils - Funzioni di utilità riutilizzabili
 
 //variabile globale per definizione del percorso delle immagini
-window.image_path = "public/assets/img/";
+window.image_path = "assets/img/";
 
 // Toast notifications
 let toastTimeout;
@@ -236,7 +236,7 @@ function clearFormErrors(formElement) {
 async function checkEmailExists(email) {
   try {
     const response = await fetch(
-      `api/auth/check-email.php?email=${encodeURIComponent(email)}`,
+      `api/auth/registrazione.php?mail=${encodeURIComponent(email)}`,
     );
     const data = await response.json();
     return data.exists || false;
@@ -330,3 +330,8 @@ function sanitizeHTML(str) {
   temp.textContent = str;
   return temp.innerHTML;
 }
+
+// Esponi funzioni globalmente
+window.showToast = showToast;
+window.showMessage = showMessage;
+window.initPasswordToggles = initPasswordToggles;

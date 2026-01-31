@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.1.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Creato il: Nov 28, 2025 alle 17:51
--- Versione del server: 10.4.28-MariaDB
--- Versione PHP: 8.2.4
+-- Creato il: Gen 31, 2026 alle 10:38
+-- Versione del server: 10.4.21-MariaDB
+-- Versione PHP: 8.1.2
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -30,7 +30,7 @@ SET time_zone = "+00:00";
 CREATE TABLE `categorie` (
   `id` int(11) NOT NULL,
   `nome` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dump dei dati per la tabella `categorie`
@@ -52,15 +52,23 @@ CREATE TABLE `ordini` (
   `totale` decimal(10,2) NOT NULL,
   `data` datetime NOT NULL,
   `id_utente` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dump dei dati per la tabella `ordini`
 --
 
 INSERT INTO `ordini` (`id`, `totale`, `data`, `id_utente`) VALUES
-(1, 10.00, '2025-11-27 14:11:40', 2),
-(2, 52.50, '2025-11-27 14:11:40', 4);
+(1, '10.00', '2025-11-27 14:11:40', NULL),
+(2, '52.50', '2025-11-27 14:11:40', NULL),
+(3, '371.39', '2026-01-18 18:11:33', 6),
+(4, '40.60', '2026-01-20 18:25:21', NULL),
+(5, '40.60', '2026-01-20 18:29:38', NULL),
+(6, '82.99', '2026-01-20 18:51:40', NULL),
+(7, '113.98', '2026-01-20 19:01:13', NULL),
+(8, '65.98', '2026-01-21 15:12:16', NULL),
+(9, '117.49', '2026-01-22 14:46:53', NULL),
+(10, '108.00', '2026-01-30 17:45:20', 6);
 
 -- --------------------------------------------------------
 
@@ -76,28 +84,48 @@ CREATE TABLE `posters` (
   `prezzo` decimal(10,2) NOT NULL,
   `image_path` varchar(255) NOT NULL,
   `id_categoria` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dump dei dati per la tabella `posters`
 --
 
 INSERT INTO `posters` (`id`, `titolo`, `descrizione`, `autore`, `prezzo`, `image_path`, `id_categoria`) VALUES
-(6, 'Minimal 1 ', 'minimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimal', 'sconosciuto', 45.00, 'https://it.pinterest.com/pin/1266706141296134/', 1),
-(7, 'Minimal 2 ', 'minimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimal', 'sconosciuto', 24.00, 'https://it.pinterest.com/pin/483785184993431377/', 1),
-(8, 'Minimal 3', 'minimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimal', 'sconosciuto', 32.99, 'https://it.pinterest.com/pin/78320481016523695/', 1),
-(9, 'Minimal 4', 'minimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimal', 'sconosciuto', 36.50, 'https://it.pinterest.com/pin/10203536651769360/', 1),
-(10, 'Minimal 5 ', 'minimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimalminimal', 'sconosciuto', 50.00, 'https://it.pinterest.com/pin/198580664814628091/', 1),
-(11, 'Geometrico 1 ', 'geometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometrico', 'sconosciuto', 35.70, 'https://it.pinterest.com/pin/18366310976323888/', 2),
-(12, 'Geometrico 2', 'geometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometrico', 'sconosciuto', 46.30, 'https://it.pinterest.com/pin/2533343530074814/', 2),
-(13, 'Geometrico 3', 'geometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometrico', 'sconosciuto', 45.25, 'https://it.pinterest.com/pin/68746488205/', 2),
-(14, 'Geometrico 4', 'geometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometrico', 'sconosciuto', 24.99, 'https://it.pinterest.com/pin/985231164938026/', 2),
-(15, 'Geometrico 5', 'geometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometricogeometrico', 'sconosciuto', 50.00, 'https://it.pinterest.com/pin/4081455907522490/', 2),
-(26, 'Natura 1 ', 'naturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanatura', 'sconosciuto', 15.65, 'https://it.pinterest.com/pin/351912466121105/', 3),
-(27, 'Natura 2 ', 'naturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanatura', 'sconosciuto', 48.50, 'https://it.pinterest.com/pin/3166662233138729/', 3),
-(28, 'Natura 3 ', 'naturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanatura', 'sconosciuto', 24.70, 'https://it.pinterest.com/pin/2111131072948814/', 3),
-(29, 'Natura 4 ', 'naturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanatura', 'sconosciuto', 42.90, 'https://it.pinterest.com/pin/492649953750858/', 3),
-(30, 'Natura 5 ', 'naturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanaturanatura', 'sconosciuto', 23.00, 'https://it.pinterest.com/pin/422281211345298/', 3);
+(6, 'The Martian', 'L\'infinità dello spazio e la solitudine dell\'esploratore. Una silhouette bianca su un Marte rosso sangue trasforma il celebre film di Ridley Scott in un\'opera di design iconica e potente', 'Olly Moss', '45.00', 'minimal-martian.jpg', 1),
+(7, 'Up ', 'La gioia di volare racchiusa in pochi cerchi colorati. Questa composizione astratta dei famosi palloncini di Up è un tocco di colore delicato e nostalgico per ogni stanza della casa.', 'Lara', '24.00', 'minimal-up.jpeg', 1),
+(9, 'Forget Everything', 'Un blu profondo che invita alla riflessione. La silhouette di una balena che nuota verso l\'ignoto è accompagnata da un messaggio motivazionale forte: \"Dimentica tutto e ricomincia\", ideale per chi cerca ispirazione e calma.', 'Alari Tammsalu', '36.50', 'minimal-whale.jpeg', 1),
+(10, 'No Idea (Pigeon)', 'Ironia urbana catturata in pixel. Questo piccione in stile mezza tinta (halftone) blu su sfondo arancio neon è il manifesto perfetto per chi affronta la vita con un pizzico di umorismo e stile street-art.', 'Alari Tammsalu', '50.00', 'minimal-noidea.jpeg', 1),
+(11, 'Bauhaus Composition', 'Un omaggio alla purezza della forma e del colore primario. Questa stampa celebra l\'estetica razionalista della scuola Bauhaus, combinando tipografia audace e geometria essenziale per un pezzo di design senza tempo.', 'Herbert Bayer/', '35.70', 'geometrico-bahaus.jpeg', 2),
+(12, 'Forme in Equilibrio', 'Una danza di semicerchi e sfere in tonalità pastello e terra. Un poster che trasmette calma e stabilità attraverso una composizione verticale perfettamente bilanciata, ideale per studi o zone living minimaliste.', 'sconosciuto', '46.30', 'geometrico-forme.jpeg', 2),
+(13, 'Fragments', 'Geometria modulare dal carattere forte. Il contrasto netto tra il nero profondo delle forme smussate e il cerchio rosso vibrante crea un punto focale magnetico, perfetto per ambienti moderni e industrial.', 'Matt', '45.25', 'geometrico-rossonero.jpeg', 2),
+(14, 'Spirale Ipnotica', 'Una spirale optical in bianco e nero incastonata in un vivace mosaico di colori pop. Un\'opera che cattura lo sguardo e simula il movimento, portando energia e creatività sulle tue pareti.', 'sconosciuto', '24.99', 'geometrico-spirale.png', 2),
+(15, 'Composizione Blu', 'Un\'indagine visiva sul blu. Linee sottili e cerchi sovrapposti giocano con le trasparenze e il rigore geometrico, creando una finestra di eleganza astratta e profondità concettuale.', 'sconosciuto', '50.00', 'geometrico-blu.png', 2),
+(26, 'Ginkgo Biloba', 'Un tributo alla bellezza senza tempo della natura. Questo poster cattura l\'eleganza minimalista della foglia di Ginkgo attraverso un design geometrico pulito e un giallo vibrante, ideale per portare luce e serenità in ogni ambiente moderno.', 'Matt', '15.65', 'natura-ginko.jpeg', 3),
+(28, 'Corallo e Punto Blu', 'Ispirato alle forme organiche del corallo, questo poster gioca con il contrasto tra il calore dell\'arancione e la profondità di un singolo dettaglio blu. Un\'opera minimalista perfetta per chi ama l\'arte astratta ispirata agli oceani.', 'sconosciuto', '24.70', 'natura-corallo.jpeg', 3),
+(29, 'Fungo Yayoi Kusama', 'Un\'esplosione di energia e colore ispirata all\'arte iconica di Yayoi Kusama. Trame puntinate, colori pop e un design ipnotico rendono questo poster un pezzo d\'arredo audace, pensato per chi non ha paura di osare con lo stile.', 'Yayoi Kusama', '58.00', 'natura-fungo.jpeg', 3),
+(33, 'Nice', 'Quando la semplicità quotidiana diventa arte. Una padella, un pomodoro e una patata sotto un lettering rosso imponente: una stampa ironica e moderna che trasforma la cucina in una galleria d\'arte.', 'Two Sides Studio', '43.00', 'minimal-nice.jpeg', 1),
+(35, 'Pesce Astratto', 'Uno stile grafico audace incontra il fascino del mare. Caratterizzato da pennellate nere decise su un fondo blu intenso, questo poster rappresenta il movimento fluido della vita acquatica con un tocco contemporaneo e sofisticato.', 'Lara', '27.50', 'natura-pesce.jpeg', 3);
+
+-- --------------------------------------------------------
+
+--
+-- Struttura della tabella `preferiti`
+--
+
+CREATE TABLE `preferiti` (
+  `id` int(11) NOT NULL,
+  `id_utente` int(11) NOT NULL,
+  `id_poster` int(11) NOT NULL,
+  `data_aggiunta` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dump dei dati per la tabella `preferiti`
+--
+
+INSERT INTO `preferiti` (`id`, `id_utente`, `id_poster`, `data_aggiunta`) VALUES
+(17, 6, 10, '2026-01-30 16:44:56'),
+(19, 6, 29, '2026-01-31 08:34:26');
 
 -- --------------------------------------------------------
 
@@ -110,16 +138,33 @@ CREATE TABLE `prodottiOrdine` (
   `id_ordine` int(11) NOT NULL,
   `id_poster` int(11) NOT NULL,
   `prezzo` decimal(10,2) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dump dei dati per la tabella `prodottiOrdine`
 --
 
 INSERT INTO `prodottiOrdine` (`id`, `id_ordine`, `id_poster`, `prezzo`) VALUES
-(1, 1, 12, 45.00),
-(2, 1, 8, 15.90),
-(3, 2, 29, 30.00);
+(1, 1, 12, '45.00'),
+(3, 2, 29, '30.00'),
+(6, 3, 12, '46.30'),
+(7, 3, 12, '46.30'),
+(8, 3, 12, '46.30'),
+(9, 3, 9, '36.50'),
+(10, 3, 6, '45.00'),
+(12, 3, 7, '24.00'),
+(13, 3, 7, '24.00'),
+(14, 3, 7, '24.00'),
+(15, 4, 11, '35.70'),
+(16, 5, 11, '35.70'),
+(17, 6, 15, '50.00'),
+(21, 7, 7, '24.00'),
+(22, 7, 7, '24.00'),
+(25, 9, 7, '24.00'),
+(26, 9, 7, '24.00'),
+(28, 9, 9, '36.50'),
+(29, 10, 29, '58.00'),
+(30, 10, 10, '50.00');
 
 -- --------------------------------------------------------
 
@@ -133,22 +178,25 @@ CREATE TABLE `utenti` (
   `cognome` varchar(50) NOT NULL,
   `mail` varchar(80) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
-  `citta` varchar(50) DEFAULT NULL,
-  `provincia` varchar(50) DEFAULT NULL,
-  `cap` int(5) DEFAULT NULL,
-  `via` varchar(80) DEFAULT NULL,
-  `ruolo` tinyint(4) NOT NULL DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `citta` varchar(50) NOT NULL,
+  `provincia` varchar(2) NOT NULL,
+  `cap` int(5) NOT NULL,
+  `via` varchar(80) NOT NULL,
+  `ruolo` tinyint(4) NOT NULL DEFAULT 0,
+  `blocked` tinyint(1) DEFAULT 0,
+  `Telefono` varchar(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dump dei dati per la tabella `utenti`
 --
 
-INSERT INTO `utenti` (`id`, `nome`, `cognome`, `mail`, `password_hash`, `citta`, `provincia`, `cap`, `via`, `ruolo`) VALUES
-(1, 'admin', 'admin', 'admin@', '000', '', '', 0, '', 1),
-(2, 'Mario ', 'Rossi', 'mariorossi@gmail.com', '111', '', '', 0, '', 0),
-(3, 'paola ', 'bianchi', 'paolabianchi@gmail.com', '111', '', '', 0, '', 0),
-(4, 'serena', 'rosa', 'serenarosa@gmail.com', '111', '', '', 0, '', 0);
+INSERT INTO `utenti` (`id`, `nome`, `cognome`, `mail`, `password_hash`, `citta`, `provincia`, `cap`, `via`, `ruolo`, `blocked`, `Telefono`) VALUES
+(5, 'giorgia', 'morgillo', 'gio@gmail.com', '$2y$10$.NDmnsiY.5EfuPNT0ncicO5HCdL/HLbvs1J/TYRTFDfOsgj52OGpW', 'Venezia', 'VE', 10020, 'Via Verdi, 68', 0, 0, '333321321'),
+(6, 'Alessia', 'Franco', 'ale@gmail.com', '$2y$10$vLpBwl7LvYvDim5TrjnDjODKbEx9Hs/FN/6Jp7ruNF1meUje7V/.u', 'Torino', 'TO', 10024, 'Via Trento 19', 1, 0, '356456456'),
+(7, 'Serena', 'Rosa', 'serenarosa@gmail.com', '$2y$10$.XLEHKnDnG31UASg2WuC0u98FXLO0wBVWtbR3/giMTAMG8h42n5KS', 'Torino', 'TO', 10800, 'via cernigliara, 24', 0, 0, '333123456'),
+(9, 'Cristina', 'gibin', 'cristina@gmail.com', '$2y$10$IfWeYQ/PFzLXz8qTKBtUC.KbOvOjSls0VJEu3OQRWP422dJC8NOq2', 'Torino', 'TO', 10024, 'Via Trento 19', 0, 0, '356456456'),
+(10, 'admin', 'admin', 'admin01@gmail.com', '$2y$10$GvKgwEim7oTjnEU/Karz8.X9aV0AFDWndw9m6RJBNCJ0ob/uDfe.G', 'Genova', 'GE', 10024, 'Via Superga 11', 1, 0, '3703224168');
 
 --
 -- Indici per le tabelle scaricate
@@ -173,6 +221,14 @@ ALTER TABLE `ordini`
 ALTER TABLE `posters`
   ADD PRIMARY KEY (`id`),
   ADD KEY `categoria` (`id_categoria`);
+
+--
+-- Indici per le tabelle `preferiti`
+--
+ALTER TABLE `preferiti`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_preferito` (`id_utente`,`id_poster`),
+  ADD KEY `id_poster` (`id_poster`);
 
 --
 -- Indici per le tabelle `prodottiOrdine`
@@ -202,25 +258,31 @@ ALTER TABLE `categorie`
 -- AUTO_INCREMENT per la tabella `ordini`
 --
 ALTER TABLE `ordini`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT per la tabella `posters`
 --
 ALTER TABLE `posters`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+
+--
+-- AUTO_INCREMENT per la tabella `preferiti`
+--
+ALTER TABLE `preferiti`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT per la tabella `prodottiOrdine`
 --
 ALTER TABLE `prodottiOrdine`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT per la tabella `utenti`
 --
 ALTER TABLE `utenti`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- Limiti per le tabelle scaricate
@@ -237,6 +299,13 @@ ALTER TABLE `ordini`
 --
 ALTER TABLE `posters`
   ADD CONSTRAINT `categoria_poster` FOREIGN KEY (`id_categoria`) REFERENCES `categorie` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Limiti per la tabella `preferiti`
+--
+ALTER TABLE `preferiti`
+  ADD CONSTRAINT `preferiti_ibfk_1` FOREIGN KEY (`id_utente`) REFERENCES `utenti` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `preferiti_ibfk_2` FOREIGN KEY (`id_poster`) REFERENCES `posters` (`id`) ON DELETE CASCADE;
 
 --
 -- Limiti per la tabella `prodottiOrdine`
