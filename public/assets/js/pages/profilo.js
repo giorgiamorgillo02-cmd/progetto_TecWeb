@@ -691,7 +691,7 @@ function setupChangePasswordModal() {
     }
 
     try {
-      const response = await fetch("reset_password.php", {
+      const response = await fetch("api/auth/reset-password.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

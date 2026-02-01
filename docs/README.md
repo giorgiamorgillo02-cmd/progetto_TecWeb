@@ -1611,8 +1611,8 @@ RewriteRule . index.html [L]
 
 **Utente di Test:**
 
-- Email: `mario.rossi@email.com`
-- Password: `password123`
+- Email: `ale@gmail.com`
+- Password: `ale1234`
 
 ### Struttura URL
 
