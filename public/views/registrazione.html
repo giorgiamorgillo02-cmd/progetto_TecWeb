@@ -10,7 +10,9 @@
         </p>
       </div>
 
+      <!-- FORM -->
       <form class="auth-form" id="registerForm">
+        <!-- nome -->
         <div class="form-group">
           <label for="firstName">*Nome</label>
           <input
@@ -23,7 +25,7 @@
           />
           <span class="field-error" id="firstNameError"></span>
         </div>
-
+        <!-- cognome -->
         <div class="form-group">
           <label for="lastName">*Cognome</label>
           <input
@@ -36,7 +38,7 @@
           />
           <span class="field-error" id="lastNameError"></span>
         </div>
-
+        <!-- email -->
         <div class="form-group">
           <label for="registerEmail">*Email</label>
           <input
@@ -48,7 +50,7 @@
           />
           <span class="field-error" id="registerEmailError"></span>
         </div>
-
+        <!-- telefono  -->
         <div class="form-group">
           <label for="telefono">*Telefono</label>
           <input
@@ -61,7 +63,7 @@
           />
           <span class="field-error" id="telefonoError"></span>
         </div>
-
+        <!-- indirizzo -->
         <div class="form-group">
           <label for="via">*Indirizzo (Via e numero civico)</label>
           <input
@@ -73,7 +75,7 @@
           />
           <span class="field-error" id="viaError"></span>
         </div>
-
+        <!-- citta -->
         <div class="form-group">
           <label for="citta">*Città</label>
           <input
@@ -86,7 +88,7 @@
           />
           <span class="field-error" id="cittaError"></span>
         </div>
-
+        <!-- provincia  -->
         <div class="form-group">
           <label for="provincia">*Provincia</label>
           <input
@@ -100,7 +102,7 @@
           />
           <span class="field-error" id="provinciaError"></span>
         </div>
-
+        <!-- cap -->
         <div class="form-group">
           <label for="cap">*CAP</label>
           <input
@@ -114,7 +116,7 @@
           />
           <span class="field-error" id="capError"></span>
         </div>
-
+        <!-- password + bottona mostra/nascondi pw -->
         <div class="form-group password-input-wrapper">
           <label for="registerPassword">*Password</label>
           <input
@@ -137,7 +139,7 @@
           </button>
           <span class="field-error" id="registerPasswordError"></span>
         </div>
-
+        <!-- conferma password + bottona mostra/nascondi pw -->
         <div class="form-group password-input-wrapper">
           <label for="registerPasswordConfirm">*Conferma password</label>
           <input
@@ -160,27 +162,24 @@
           </button>
           <span class="field-error" id="registerPasswordConfirmError"></span>
         </div>
-
+        <!-- termini e condizioni -->
         <div class="form-row">
           <label class="checkbox-label">
             <input type="checkbox" id="terms" required />
-            <span>
-              *Accetto i
-              <a href="#" class="form-link">Termini e Condizioni</a>
-              e la
-              <a href="#" class="form-link">Privacy Policy</a>
-            </span>
+            <span> *Accetto i Termini e Condizioni e la Privacy Policy </span>
           </label>
         </div>
-
+        <!-- bottone crea account -->
         <button type="submit" class="btn auth-btn">Crea account</button>
 
+        <!-- sezione che reindirizza a login -->
         <p class="auth-alt">
           Hai già un account?
           <a href="/login" data-link class="form-link">Accedi</a>
         </p>
       </form>
 
+      <!-- sezione info aggiuntive -->
       <div class="auth-benefits">
         <p class="benefits-title">Cosa puoi fare con il tuo account:</p>
         <ul class="auth-points">

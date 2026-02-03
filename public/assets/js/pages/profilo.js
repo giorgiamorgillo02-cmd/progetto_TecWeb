@@ -1,38 +1,58 @@
-// Verifica autenticazione all'avvio
+/**
+ * PAGINA PROFILO UTENTE
+ * Gestisce visualizzazione dati personali, modifica profilo, cambio password e storico ordini
+ */
+
+// Cache dati utente corrente per evitare chiamate ripetute
 let currentUserData = null;
 
+/**
+ * Inizializza la pagina profilo
+ * Entry point chiamato dal router quando si carica /profilo
+ */
 function initProfiloPage() {
-  checkAuthAndLoadProfile();
-  setupEditProfileModal();
-  setupChangePasswordModal();
+  checkAuthAndLoadProfile(); // Verifica login e carica dati
+  setupEditProfileModal(); // Configura modale modifica profilo
+  setupChangePasswordModal(); // Configura modale cambio password
 }
 
+// Espone funzione per il router
 window.initProfiloPage = initProfiloPage;
 
+/**
+ * Verifica autenticazione e carica dati profilo
+ * Se non autenticato, reindirizza a login con URL di ritorno
+ */
 function checkAuthAndLoadProfile() {
   fetch("api/me.php")
     .then((response) => response.json())
     .then((data) => {
       if (!data.authenticated) {
-        // Se non è loggato, reindirizza al login
+        // Redirect a login con query param per tornare qui dopo il login
         const redirectUrl = encodeURIComponent("/profilo");
         window.location.href = `login.html?redirect=${redirectUrl}`;
         return;
       }
-      // Salva i dati utente
+      // Salva dati in cache per riutilizzo
       currentUserData = data;
-      // Carica i dati del profilo
+      // Aggiorna lo store globale per sincronizzare header e altri componenti
+      store.setUser(data);
+      // Popola UI con dati personali e storico ordini
       loadUserProfile(data);
       loadUserOrders();
     })
     .catch((error) => {
+      // Errore API = considerato come non autenticato
       console.error("Errore verifica autenticazione:", error);
       const redirectUrl = encodeURIComponent("/profilo");
       window.location.href = `login.html?redirect=${redirectUrl}`;
     });
 }
 
-// Carica i dati personali dell'utente
+/**
+ * Popola i campi di visualizzazione con i dati utente
+ * Usa "-" come fallback se campo mancante
+ */
 function loadUserProfile(userData) {
   document.getElementById("userNome").textContent = userData.nome || "-";
   document.getElementById("userCognome").textContent = userData.cognome || "-";
@@ -46,15 +66,19 @@ function loadUserProfile(userData) {
   document.getElementById("userCap").textContent = userData.cap || "-";
 }
 
-// Setup modale di modifica profilo
+/**
+ * Configura modale di modifica profilo
+ * Setup: event listeners, validazione in tempo reale, submit
+ */
 function setupEditProfileModal() {
+  // Riferimenti DOM
   const editBtn = document.getElementById("editProfileBtn");
   const modal = document.getElementById("editProfileModal");
   const closeBtn = document.getElementById("closeEditModal");
   const cancelBtn = document.getElementById("cancelEditBtn");
   const form = document.getElementById("editProfileForm");
 
-  // Elementi del form
+  // Input fields
   const nomeInput = document.getElementById("editNome");
   const cognomeInput = document.getElementById("editCognome");
   const emailInput = document.getElementById("editEmail");
@@ -73,14 +97,20 @@ function setupEditProfileModal() {
   const provinciaError = document.getElementById("editProvinciaError");
   const capError = document.getElementById("editCapError");
 
-  // Funzioni di validazione
+  /**
+   * FUNZIONI DI VALIDAZIONE
+   * Restituiscono stringa errore se fallisce, stringa vuota se valido
+   */
+
+  // Valida campo obbligatorio generico
   function validateRequired(value, fieldName) {
     if (!value || value.trim() === "") {
       return `${fieldName} è obbligatorio`;
     }
-    return "";
+    return ""; // Valido
   }
 
+  // Valida formato email (controllo base)
   function validateEmail(email) {
     if (!email || email.trim() === "") return "L'email è obbligatoria";
     if (!email.includes("@") || !email.includes(".")) {
@@ -89,16 +119,18 @@ function setupEditProfileModal() {
     return "";
   }
 
+  // Valida telefono (rimuove spazi e verifica lunghezza)
   function validateTelefono(telefono) {
     if (!telefono || telefono.trim() === "")
       return "Il telefono è obbligatorio";
-    const cleaned = telefono.replace(/\s/g, "");
+    const cleaned = telefono.replace(/\s/g, ""); // Rimuove spazi
     if (cleaned.length < 9 || cleaned.length > 15) {
       return "Inserisci un numero di telefono valido (9-15 cifre)";
     }
     return "";
   }
 
+  // Valida sigla provincia (es. MI, RM, NA)
   function validateProvincia(provincia) {
     if (!provincia || provincia.trim() === "")
       return "La provincia è obbligatoria";
@@ -108,6 +140,7 @@ function setupEditProfileModal() {
     return "";
   }
 
+  // Valida CAP italiano (5 cifre numeriche)
   function validateCap(cap) {
     if (!cap || cap.trim() === "") return "Il CAP è obbligatorio";
     if (cap.length !== 5 || isNaN(cap)) {
@@ -205,13 +238,14 @@ function setupEditProfileModal() {
     }
   });
 
+  // Provincia: converte automaticamente in maiuscolo (es. "mi" → "MI")
   provinciaInput.addEventListener("blur", () => {
     const error = validateProvincia(provinciaInput.value.toUpperCase());
     showFieldError(provinciaInput, provinciaError, error);
   });
 
   provinciaInput.addEventListener("input", () => {
-    provinciaInput.value = provinciaInput.value.toUpperCase();
+    provinciaInput.value = provinciaInput.value.toUpperCase(); // Auto-uppercase
     if (provinciaInput.classList.contains("input-error")) {
       const error = validateProvincia(provinciaInput.value);
       showFieldError(provinciaInput, provinciaError, error);
@@ -246,16 +280,23 @@ function setupEditProfileModal() {
     }
   });
 
-  // Submit form
+  /**
+   * SUBMIT FORM MODIFICA PROFILO
+   * 1. Previeni reload pagina
+   * 2. Valida tutti i campi
+   * 3. Invia PATCH a API
+   * 4. Mostra successo e ricarica dati
+   */
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    // Reset messaggi feedback
     const errorMsg = document.getElementById("editErrorMessage");
     const successMsg = document.getElementById("editSuccessMessage");
     errorMsg.style.display = "none";
     successMsg.style.display = "none";
 
-    // Raccogli i dati dal form
+    // Raccogli valori dal form (trim rimuove spazi)
     const nome = nomeInput.value.trim();
     const cognome = cognomeInput.value.trim();
     const mail = emailInput.value.trim();
@@ -265,7 +306,7 @@ function setupEditProfileModal() {
     const provincia = provinciaInput.value.trim().toUpperCase();
     const cap = capInput.value.trim();
 
-    // Validazione finale
+    // Validazione finale di tutti i campi prima dell'invio
     const nomeErr = validateRequired(nome, "Il nome");
     const cognomeErr = validateRequired(cognome, "Il cognome");
     const emailErr = validateEmail(mail);
@@ -275,6 +316,7 @@ function setupEditProfileModal() {
     const provinciaErr = validateProvincia(provincia);
     const capErr = validateCap(cap);
 
+    // Mostra tutti gli errori contemporaneamente
     showFieldError(nomeInput, nomeError, nomeErr);
     showFieldError(cognomeInput, cognomeError, cognomeErr);
     showFieldError(emailInput, emailError, emailErr);
@@ -284,6 +326,7 @@ function setupEditProfileModal() {
     showFieldError(provinciaInput, provinciaError, provinciaErr);
     showFieldError(capInput, capError, capErr);
 
+    // Blocca submit se almeno un campo ha errori
     if (
       nomeErr ||
       cognomeErr ||
@@ -296,9 +339,10 @@ function setupEditProfileModal() {
     ) {
       errorMsg.textContent = "Correggi gli errori nel form";
       errorMsg.style.display = "block";
-      return;
+      return; // Stop qui, non inviare
     }
 
+    // Prepara payload per API
     const formData = {
       nome,
       cognome,
@@ -311,6 +355,7 @@ function setupEditProfileModal() {
     };
 
     try {
+      // PATCH api/me.php per aggiornare profilo
       const response = await fetch("api/me.php", {
         method: "PATCH",
         headers: {
@@ -322,13 +367,14 @@ function setupEditProfileModal() {
       const data = await response.json();
 
       if (data.success) {
+        // Mostra messaggio successo
         successMsg.textContent = "Profilo aggiornato con successo!";
         successMsg.style.display = "block";
 
-        // Ricarica i dati del profilo
+        // Dopo 1.5s chiudi modale e ricarica dati aggiornati
         setTimeout(() => {
           closeEditModal();
-          checkAuthAndLoadProfile();
+          checkAuthAndLoadProfile(); // Refresh dati profilo
         }, 1500);
       } else {
         errorMsg.textContent = data.message || "Errore durante l'aggiornamento";
@@ -342,11 +388,14 @@ function setupEditProfileModal() {
   });
 }
 
-// Apri modale e popola i campi
+/**
+ * Apre modale modifica profilo
+ * Popola i campi con i dati attuali dell'utente
+ */
 function openEditModal() {
   const modal = document.getElementById("editProfileModal");
 
-  // Popola i campi con i dati attuali
+  // Pre-compila form con dati esistenti da cache
   if (currentUserData) {
     document.getElementById("editNome").value = currentUserData.nome || "";
     document.getElementById("editCognome").value =
@@ -397,21 +446,24 @@ function openEditModal() {
   modal.style.display = "flex";
 }
 
-// Chiudi modale
+/**
+ * Chiude modale modifica profilo
+ */
 function closeEditModal() {
   const modal = document.getElementById("editProfileModal");
   modal.style.display = "none";
 }
 
-// Gestisci aggiornamento profilo
-
-// Carica lo storico ordini
+/**
+ * Carica e mostra lo storico ordini dell'utente
+ * Chiamata API: GET api/user/ordini.php
+ */
 function loadUserOrders() {
   fetch("api/user/ordini.php")
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
-        displayOrders(data.ordini);
+        displayOrders(data.ordini); // Renderizza card ordini
       } else {
         document.getElementById("ordersContainer").innerHTML =
           '<p class="no-orders">Nessun ordine trovato.</p>';
@@ -424,20 +476,27 @@ function loadUserOrders() {
     });
 }
 
-// Mostra gli ordini
+/**
+ * Renderizza le card ordini nel DOM
+ * Ogni ordine mostra: ID, data, totale, lista prodotti, bottone riordina
+ */
 function displayOrders(ordini) {
   const container = document.getElementById("ordersContainer");
 
+  // Base path per immagini (configurabile globalmente)
   const basePath = window.image_path || "assets/img/";
 
+  // Caso nessun ordine
   if (ordini.length === 0) {
     container.innerHTML = '<p class="no-orders">Nessun ordine trovato.</p>';
     return;
   }
 
+  // Genera HTML per ogni ordine
   let html = "";
 
   ordini.forEach((ordine) => {
+    // Formatta data in italiano (es. "01 febbraio 2026, 14:30")
     const dataOrdine = new Date(ordine.data).toLocaleDateString("it-IT", {
       day: "2-digit",
       month: "long",
@@ -485,8 +544,12 @@ function displayOrders(ordini) {
 
   container.innerHTML = html;
 }
-// Funzione per riordinare (aggiunge tutti i prodotti dell'ordine al carrello)
+/**
+ * Riordina: aggiunge tutti i prodotti di un ordine al carrello
+ * @param {number} orderId - ID dell'ordine da riordinare
+ */
 function reorderItems(orderId) {
+  // Ricarica ordini per avere dati freschi
   fetch("api/user/ordini.php")
     .then((response) => response.json())
     .then((data) => {
@@ -495,33 +558,34 @@ function reorderItems(orderId) {
         return;
       }
 
-      // Trova l'ordine specifico
+      // Trova ordine corrispondente all'ID
       const ordine = data.ordini.find((o) => o.id === orderId);
       if (!ordine) {
         showToast("Ordine non trovato");
         return;
       }
 
-      // Ottieni il carrello attuale
+      // Recupera carrello esistente da localStorage
       let cart = [];
       const savedCart = localStorage.getItem("artly_cart");
       if (savedCart) {
         try {
           cart = JSON.parse(savedCart);
         } catch (e) {
-          cart = [];
+          cart = []; // Fallback se JSON malformato
         }
       }
 
-      // Aggiungi tutti i prodotti dell'ordine al carrello
+      // Aggiungi ogni prodotto dell'ordine al carrello
       ordine.prodotti.forEach((prodotto) => {
+        // Controlla se prodotto è già nel carrello
         const existingIndex = cart.findIndex((item) => item.id === prodotto.id);
         if (existingIndex !== -1) {
-          // Prodotto già nel carrello, incrementa quantità
+          // Prodotto esistente: incrementa quantità
           cart[existingIndex].quantity =
             (cart[existingIndex].quantity || 1) + 1;
         } else {
-          // Aggiungi nuovo prodotto al carrello
+          // Nuovo prodotto: aggiungilo con quantity = 1
           cart.push({
             id: prodotto.id,
             titolo: prodotto.titolo,
@@ -533,10 +597,10 @@ function reorderItems(orderId) {
         }
       });
 
-      // Salva il carrello aggiornato
+      // Persisti carrello aggiornato in localStorage
       localStorage.setItem("artly_cart", JSON.stringify(cart));
 
-      // Aggiorna il contatore del carrello
+      // Aggiorna badge contatore carrello nell'header
       const totalItems = cart.reduce(
         (sum, item) => sum + (item.quantity || 1),
         0,
@@ -546,11 +610,12 @@ function reorderItems(orderId) {
         cartCountEl.textContent = totalItems;
       }
 
+      // Feedback visivo con toast
       showToast(
         `${ordine.prodotti.length} prodott${ordine.prodotti.length > 1 ? "i aggiunti" : "o aggiunto"} al carrello!`,
       );
 
-      // Dopo 1.5 secondi reindirizza al carrello
+      // Redirect automatico al carrello dopo 1.5s
       setTimeout(() => {
         window.location.href = "carrello.html";
       }, 1500);
@@ -561,15 +626,19 @@ function reorderItems(orderId) {
     });
 }
 
-// Setup modale cambio password
+/**
+ * Configura modale cambio password
+ * Validazione: password minimo 6 caratteri, conferma deve coincidere
+ */
 function setupChangePasswordModal() {
+  // Riferimenti DOM
   const changePasswordBtn = document.getElementById("changePasswordBtn");
   const modal = document.getElementById("changePasswordModal");
   const closeBtn = document.getElementById("closeChangePasswordModal");
   const cancelBtn = document.getElementById("cancelChangePasswordBtn");
   const form = document.getElementById("changePasswordForm");
 
-  // Elementi del form
+  // Input fields password
   const newPasswordInput = document.getElementById("changePasswordNew");
   const confirmPasswordInput = document.getElementById("changePasswordConfirm");
   const newPasswordError = document.getElementById("changePasswordNewError");
@@ -577,7 +646,11 @@ function setupChangePasswordModal() {
     "changePasswordConfirmError",
   );
 
-  // Funzioni di validazione
+  /**
+   * VALIDAZIONE PASSWORD
+   */
+
+  // Valida lunghezza minima password
   function validatePassword(password) {
     if (!password) return "La password è obbligatoria";
     if (password.length < 6) {
@@ -586,6 +659,7 @@ function setupChangePasswordModal() {
     return "";
   }
 
+  // Valida che conferma password corrisponda
   function validatePasswordConfirm(password, passwordConfirm) {
     if (!passwordConfirm) return "Conferma la password";
     if (password !== passwordConfirm) {
@@ -666,10 +740,14 @@ function setupChangePasswordModal() {
     }
   });
 
-  // Submit form
+  /**
+   * SUBMIT CAMBIO PASSWORD
+   * Invia POST a api/auth/reset-password.php
+   */
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    // Reset messaggi feedback
     const errorMsg = document.getElementById("changePasswordError");
     const successMsg = document.getElementById("changePasswordSuccess");
     errorMsg.style.display = "none";
@@ -679,7 +757,7 @@ function setupChangePasswordModal() {
     const newPassword = newPasswordInput.value;
     const confirmPassword = confirmPasswordInput.value;
 
-    // Validazione finale
+    // Validazione finale prima invio
     const passwordErr = validatePassword(newPassword);
     const confirmErr = validatePasswordConfirm(newPassword, confirmPassword);
 
@@ -687,10 +765,11 @@ function setupChangePasswordModal() {
     showFieldError(confirmPasswordInput, confirmPasswordError, confirmErr);
 
     if (passwordErr || confirmErr) {
-      return;
+      return; // Blocca se errori
     }
 
     try {
+      // POST api/auth/reset-password.php con email e nuova password
       const response = await fetch("api/auth/reset-password.php", {
         method: "POST",
         headers: {
@@ -725,11 +804,14 @@ function setupChangePasswordModal() {
   });
 }
 
-// Apri modale cambio password
+/**
+ * Apre modale cambio password
+ * Pre-compila email e resetta campi password
+ */
 function openChangePasswordModal() {
   const modal = document.getElementById("changePasswordModal");
 
-  // Precompila email con i dati dell'utente
+  // Pre-riempie email (read-only) con quella dell'utente loggato
   if (currentUserData && currentUserData.email) {
     document.getElementById("changePasswordEmail").value =
       currentUserData.email;
@@ -760,7 +842,7 @@ function openChangePasswordModal() {
   document.getElementById("changePasswordError").style.display = "none";
   document.getElementById("changePasswordSuccess").style.display = "none";
 
-  // Inizializza i toggle delle password
+  // Inizializza i toggle delle password (se disponibile globalmente)
   if (typeof initPasswordToggles === "function") {
     initPasswordToggles();
   }
@@ -768,10 +850,10 @@ function openChangePasswordModal() {
   modal.style.display = "flex";
 }
 
-// Chiudi modale cambio password
+/**
+ * Chiude modale cambio password
+ */
 function closeChangePasswordModal() {
   const modal = document.getElementById("changePasswordModal");
   modal.style.display = "none";
 }
-
-// Gestisci cambio password

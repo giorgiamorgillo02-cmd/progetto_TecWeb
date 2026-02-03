@@ -1,162 +1,299 @@
-// Admin Dashboard JavaScript
+/**
+ * ========================================
+ * ADMIN DASHBOARD - JavaScript Controller
+ * ========================================
+ *
+ * Questo file gestisce l'intera dashboard di amministrazione del sito,
+ * permettendo agli admin di gestire prodotti e utenti attraverso un'interfaccia intuitiva.
+ *
+ * FUNZIONALITÀ PRINCIPALI:
+ * - Gestione Prodotti: CRUD completo (Create, Read, Update, Delete)
+ * - Gestione Utenti: visualizzazione, blocco/sblocco, cambio ruoli
+ * - Statistiche Dashboard: contatori prodotti, utenti, admin
+ * - Navigazione tabs: switch tra sezione prodotti e utenti
+ * - Modali di conferma: per azioni critiche (eliminazione, blocco)
+ * - Validazione form: real-time validation per campi prodotto
+ *
+ * ARCHITETTURA:
+ * - Pattern MVC: questo file è il Controller che gestisce le interazioni
+ * - State Management: variabili globali per cache dei dati
+ * - API REST: comunicazione asincrona con backend PHP
+ * - Event-driven: listener su form, bottoni, modali
+ *
+ * SICUREZZA:
+ * - Controllo autenticazione: verifica login all'avvio
+ * - Controllo autorizzazione: verifica ruolo admin
+ * - Protezione utente corrente: impedisce auto-modifica
+ * - Conferme modali: per azioni distruttive
+ */
 
-let currentUser = null;
-let allProducts = [];
-let allUsers = [];
-let allCategories = [];
-let productToDeleteId = null; //per eliminare prodotto
-let userToBlockId = null; //per bloccare utente
-let blockStatus = null;
-let userToToggleRoleId = null; //per cambiare ruolo
-let roleTarget = null;
+// ========================================
+// STATO GLOBALE DELL'APPLICAZIONE
+// ========================================
+// Queste variabili mantengono lo stato corrente della dashboard
+// e vengono utilizzate da tutte le funzioni per condividere dati
 
-// Funzione di inizializzazione principale
+let currentUser = null; // Oggetto utente loggato (da store), contiene id, nome, cognome, ruolo
+let allProducts = []; // Array di tutti i prodotti caricati dal backend
+let allUsers = []; // Array di tutti gli utenti caricati dal backend
+let allCategories = []; // Array di tutte le categorie disponibili per i prodotti
+
+// Variabili temporanee per gestire le operazioni sui modali
+let productToDeleteId = null; // ID del prodotto in attesa di conferma eliminazione
+let userToBlockId = null; // ID dell'utente in attesa di conferma blocco/sblocco
+let blockStatus = null; // Stato target del blocco (1=blocca, 0=sblocca)
+let userToToggleRoleId = null; // ID dell'utente in attesa di cambio ruolo
+let roleTarget = null; // Ruolo target (1=admin, 0=utente normale)
+
+// ========================================
+// INIZIALIZZAZIONE PAGINA
+// ========================================
+
+/**
+ * Funzione principale di inizializzazione della dashboard admin
+ * FLUSSO OPERATIVO:
+ * 1. Verifica autenticazione utente (se non loggato → redirect a login)
+ * 2. Verifica autorizzazione admin (se non admin → redirect a home)
+ * 3. Carica dati iniziali (categorie, prodotti, utenti)
+ * 4. Inizializza componenti UI (form, modali, tabs)
+ * @async - È asincrona perché deve attendere il caricamento dei dati dal backend
+ * @returns {void}
+ */
 async function initAdminPage() {
-  console.log("🔧 Inizializzazione Admin Dashboard...");
-
-  // Ottieni dati utente dallo store
+  // STEP 1: Ottieni dati utente corrente dallo store (localStorage)
   const user = store.getUser();
 
-  // Verifica che l'utente sia autenticato
+  // STEP 2: SECURITY CHECK - Verifica autenticazione
+  // Se l'utente non è loggato, reindirizza alla pagina di login
   if (!user || !store.isAuthenticated()) {
-    console.error("❌ Utente non autenticato");
+    // Prova a usare il router SPA se disponibile, altrimenti fallback a redirect classico
     if (typeof router !== "undefined") {
-      const redirectUrl = encodeURIComponent("/admin");
-      router.navigate(`/login?redirect=${redirectUrl}`);
+      const redirectUrl = encodeURIComponent("/admin"); // Salva l'URL di destinazione
+      router.navigate(`/login?redirect=${redirectUrl}`); // Passa URL come parametro GET
     } else {
+      // Fallback per compatibilità con vecchia navigazione multi-page,
       window.location.href =
         "login.html?redirect=" + encodeURIComponent("/admin");
     }
-    return;
+    return; // GUARD CLAUSE: esci immediatamente
   }
 
-  // Verifica che l'utente sia admin
+  // STEP 3: AUTHORIZATION CHECK - Verifica ruolo admin
+  // Solo gli admin (ruolo === 1) possono accedere a questa pagina
   if (!store.isAdmin()) {
-    console.error("❌ Accesso negato: utente non è admin");
+    // Mostra messaggio di errore se la funzione toast è disponibile
     if (typeof showToast !== "undefined") {
       showToast("Accesso negato: solo gli amministratori possono accedere");
     }
+
+    // Reindirizza alla home page
     if (typeof router !== "undefined") {
       router.navigate("/home");
     } else {
       window.location.href = "index.html";
     }
-    return;
+    return; // GUARD CLAUSE: esci immediatamente
   }
 
-  console.log("👤 Admin:", user.nome, user.cognome);
-  currentUser = user;
+  // STEP 4: Controlli superati! Salva utente corrente e procedi
+  currentUser = user; // Salva in variabile globale per uso in altre funzioni
 
-  await loadCategories();
-  await loadDashboardData();
-  setupNavigation();
-  setupProductForm();
-  setupDeleteModal();
-  setupBlockUserModal();
-  setupAdminRoleModal();
+  // STEP 5: Carica tutti i dati necessari
+  await loadCategories(); // Carica categorie per select nel form prodotto
+  await loadDashboardData(); // Carica prodotti e utenti, aggiorna statistiche
+
+  // STEP 6: Inizializza tutti i componenti dell'interfaccia
+  setupNavigation(); // Gestione tabs (prodotti/utenti)
+  setupProductForm(); // Form di creazione/modifica prodotto + validazione
+  setupDeleteModal(); // Modale conferma eliminazione prodotto
+  setupBlockUserModal(); // Modale conferma blocco/sblocco utente
+  setupAdminRoleModal(); // Modale conferma cambio ruolo utente
+  setupErrorModal(); // Modale per messaggi di errore
 }
 
-// Esponi globalmente per la SPA
+// Espone la funzione globalmente per permettere al router SPA di chiamarla
+// Questo permette la navigazione senza ricaricare la pagina
 window.initAdminPage = initAdminPage;
 
-// Inizializzazione per compatibilità con vecchio modo
-document.addEventListener("DOMContentLoaded", async () => {
-  if (document.getElementById("admin-dashboard")) {
-    await initAdminPage();
-  }
-});
-
-// Carica categorie
+// ========================================
+// GESTIONE CATEGORIE
+// ========================================
+/**
+ * Carica tutte le categorie disponibili dal backend
+ * API ENDPOINT: GET /api/catalogo/categorie.php
+ * RISPOSTA ATTESA: { success: true, data: [{id, nome}, ...] }
+ * @async
+ * @returns {Promise<void>}
+ */
 async function loadCategories() {
   try {
     const response = await fetch("api/catalogo/categorie.php");
     const data = await response.json();
+
     if (data.success) {
-      allCategories = data.data; // Corretto da data.categorie a data.data
-      populateCategorySelect();
+      allCategories = data.data; // La risposta API contiene l'array in data.data
+      populateCategorySelect(); // Popola immediatamente la select nel form
     }
   } catch (error) {
     console.error("Errore caricamento categorie:", error);
+    // Non blocca l'esecuzione: il form funzionerà comunque, solo senza categorie
   }
 }
 
+/**
+ * Popola la select delle categorie nel form prodotto
+ *
+ * Questa funzione costruisce dinamicamente le opzioni della select HTML
+ * utilizzando l'array allCategories caricato dal backend.
+ *
+ * @returns {void}
+ */
 function populateCategorySelect() {
   const select = document.getElementById("product-categoria");
+
+  // GUARD: Verifica che l'elemento esista nel DOM
   if (!select) {
-    console.warn("⚠️ Select categoria non trovato");
     return;
   }
+
+  // Reset: Pulisce eventuali opzioni precedenti e aggiunge opzione placeholder
   select.innerHTML = '<option value="">-- Seleziona una categoria --</option>';
 
+  // CASO 1: Nessuna categoria disponibile
   if (allCategories.length === 0) {
     select.innerHTML =
       '<option value="">Nessuna categoria disponibile</option>';
-    select.disabled = true;
+    select.disabled = true; // Disabilita la select per evitare confusione
     return;
   }
 
-  select.disabled = false;
+  // CASO 2: Categorie disponibili - costruisci opzioni dinamicamente
+  select.disabled = false; // Riabilita la select (potrebbe essere stata disabilitata prima)
+
+  // Itera su tutte le categorie e crea un'opzione per ciascuna
   allCategories.forEach((cat) => {
     const option = document.createElement("option");
-    option.value = cat.id;
-    option.textContent = cat.nome;
-    select.appendChild(option);
+    option.value = cat.id; // Valore inviato al backend
+    option.textContent = cat.nome; // Testo visibile all'utente
+    select.appendChild(option); // Aggiunge l'opzione alla select
   });
 }
 
-// Carica dati dashboard
+// ========================================
+// CARICAMENTO DATI E STATISTICHE DASHBOARD
+// ========================================
+
+/**
+ * Carica tutti i dati necessari per la dashboard e aggiorna le statistiche
+ * Questa è una funzione che coordina il caricamento di prodotti e utenti in parallelo, poi aggiorna i contatori nella UI.
+ * FLUSSO:
+ * 1. Lancia loadProducts() e loadUsers() in parallelo
+ * 2. Attende che entrambe finiscano
+ * 3. Calcola e mostra le statistiche nei badge in alto
+ *
+ * @async
+ * @returns {Promise<void>}
+ */
 async function loadDashboardData() {
+  // Carica prodotti e utenti in parallelo per ottimizzare i tempi
   await Promise.all([loadProducts(), loadUsers()]);
+
+  // Una volta caricati i dati, aggiorna i contatori visualizzati
   updateDashboardStats();
 }
 
+/**
+ * Aggiorna i badge con le statistiche della dashboard
+ *
+ * Calcola e mostra in tempo reale:
+ * - Numero totale di prodotti
+ * - Numero totale di utenti
+ * - Numero di amministratori
+ * - Numero di utenti bloccati
+ *
+ * QUANDO VIENE CHIAMATA:
+ * - All'inizializzazione della pagina (dopo loadDashboardData)
+ * - Dopo operazioni che modificano utenti (blocco, cambio ruolo)
+ * - Dopo operazioni che modificano prodotti (aggiunta, eliminazione)
+ * @returns {void}
+ */
 function updateDashboardStats() {
+  // Ottieni riferimenti agli elementi HTML dei contatori
   const totalProducts = document.getElementById("total-products");
   const totalUsers = document.getElementById("total-users");
   const totalAdmins = document.getElementById("total-admins");
   const totalBlocked = document.getElementById("total-blocked");
 
+  // Aggiorna ogni contatore solo se l'elemento esiste nel DOM
   if (totalProducts) totalProducts.textContent = allProducts.length;
   if (totalUsers) totalUsers.textContent = allUsers.length;
+
+  // Filtra array per contare solo admin (ruolo === 1)
   if (totalAdmins)
     totalAdmins.textContent = allUsers.filter((u) => u.ruolo == 1).length;
+
+  // Filtra array per contare solo utenti bloccati (blocked === 1)
   if (totalBlocked)
     totalBlocked.textContent = allUsers.filter((u) => u.blocked == 1).length;
 }
 
-// ===== GESTIONE PRODOTTI =====
+// ========================================
+// GESTIONE PRODOTTI - CRUD COMPLETO
+// ========================================
+// Questa sezione gestisce tutte le operazioni sui prodotti:
+// Create (POST), Read (GET), Update (PATCH), Delete (DELETE)
 
+/**
+ * Carica tutti i prodotti dal backend tramite API
+ *
+ * Recupera l'elenco completo dei prodotti con tutte le informazioni
+ * necessarie per la visualizzazione nella tabella admin.
+ * @async
+ * @returns {Promise<void>}
+ */
 async function loadProducts() {
   try {
     const response = await fetch("api/admin/prodotti.php");
     const data = await response.json();
 
     if (data.success) {
-      allProducts = data.prodotti;
-      displayProducts();
+      allProducts = data.prodotti; // Salva in cache globale
+      displayProducts(); // Renderizza immediatamente la tabella
     } else {
+      // Errore lato server (es. database non raggiungibile)
       showError("Errore caricamento prodotti");
     }
   } catch (error) {
+    // Errore di rete o parsing JSON
     console.error("Errore:", error);
     showError("Errore caricamento prodotti");
   }
 }
 
+/**
+ * Renderizza la tabella dei prodotti nell'interfaccia admin
+ *
+ * Costruisce dinamicamente una tabella HTML con tutti i prodotti caricati,
+ * includendo le azioni di modifica ed eliminazione per ogni riga.
+ *
+ * @returns {void}
+ */
 function displayProducts() {
   const container = document.getElementById("prodotti-list");
 
+  // GUARD: Verifica esistenza container nel DOM
   if (!container) {
-    console.warn("⚠️ Container prodotti-list non trovato");
     return;
   }
 
+  // CASO 1: Nessun prodotto - mostra empty state
   if (allProducts.length === 0) {
     container.innerHTML =
       '<div class="empty-state"><p>Nessun prodotto trovato</p></div>';
     return;
   }
 
+  // CASO 2: Costruisci tabella HTML dinamicamente
   let html = `
         <table>
             <thead>
@@ -172,11 +309,14 @@ function displayProducts() {
             <tbody>
     `;
 
+  // Itera su ogni prodotto e crea una riga
   allProducts.forEach((product) => {
+    // Determina il badge categoria: se esiste mostra nome, altrimenti "Senza categoria"
     const categoriaBadge = product.categoria_nome
       ? `<span class="badge-category">${product.categoria_nome}</span>`
       : '<span class="badge-category no-category">Senza categoria</span>';
 
+    // Costruisci riga tabella con dati prodotto e bottoni azione
     html += `
             <tr>
                 <td>${product.id}</td>
@@ -193,28 +333,60 @@ function displayProducts() {
   });
 
   html += "</tbody></table>";
-  container.innerHTML = html;
+  container.innerHTML = html; // Inietta HTML nel DOM
 }
 
+/**
+ * Apre il modale per aggiungere un nuovo prodotto
+ *
+ * Inizializza il form in modalità "creazione":
+ *
+ * CHIAMATA DA:
+ * - Click sul bottone "Aggiungi Prodotto" nella sezione prodotti
+ *
+ * @returns {void}
+ */
 function openAddProductModal() {
+  // Imposta titolo modale per indicare modalità creazione
   document.getElementById("productModalTitle").textContent =
     "Aggiungi Prodotto";
+
+  // Svuota campo ID nascosto (indica che è un nuovo prodotto)
   document.getElementById("product-id").value = "";
+
+  // Reset completo del form (cancella tutti i valori)
   document.getElementById("productForm").reset();
+
+  // Imposta valore default per autore
   document.getElementById("product-autore").value = "sconosciuto";
 
-  // Ripopola le categorie per essere sicuri che siano aggiornate
+  // Ripopola le categorie per garantire che siano aggiornate
   populateCategorySelect();
 
+  // Mostra il modale
   document.getElementById("productModal").style.display = "block";
 }
 
+/**
+ * Apre il modale per modificare un prodotto esistente
+ *
+ * Inizializza il form in modalità "modifica":
+ *
+ * @param {number} productId - ID del prodotto da modificare
+ * @returns {void}
+ */
 function openEditProductModal(productId) {
+  // Cerca il prodotto nell'array caricato
   const product = allProducts.find((p) => p.id == productId);
+
+  // GUARD: Se prodotto non trovato, esce
   if (!product) return;
 
+  // Imposta titolo modale per indicare modalità modifica
   document.getElementById("productModalTitle").textContent =
     "Modifica Prodotto";
+
+  // Compila tutti i campi con i dati del prodotto
   document.getElementById("product-id").value = product.id;
   document.getElementById("product-titolo").value = product.titolo;
   document.getElementById("product-descrizione").value = product.descrizione;
@@ -222,63 +394,135 @@ function openEditProductModal(productId) {
   document.getElementById("product-prezzo").value = product.prezzo;
   document.getElementById("product-image").value = product.image_path;
 
-  // Ripopola le categorie per essere sicuri che siano aggiornate
+  // Ripopola categorie per garantire sincronizzazione
   populateCategorySelect();
 
-  // Imposta la categoria selezionata
+  // Imposta la categoria selezionata (o vuoto se non ha categoria)
   document.getElementById("product-categoria").value =
     product.id_categoria || "";
 
+  // Mostra il modale
   document.getElementById("productModal").style.display = "block";
 }
 
+/**
+ * Chiude il modale prodotto
+ *
+ * Nasconde semplicemente il modale senza fare altre operazioni.
+ * @returns {void}
+ */
 function closeProductModal() {
   document.getElementById("productModal").style.display = "none";
 }
 
+/**
+ * Inizializza il form prodotto con validazione real-time e gestione submit
+ *
+ * Questa è una delle funzioni più complesse del file. Gestisce:
+ * 1. Validazione in tempo reale di tutti i campi
+ * 2. Feedback visivo immediato (bordi rossi/verdi, messaggi errore)
+ * 3. Submit del form (CREATE o UPDATE)
+ * 4. Comunicazione con API backend
+ *
+ * VALIDAZIONE REAL-TIME:
+ * - Evento "blur": quando l'utente esce da un campo
+ * - Evento "input": mentre l'utente digita (solo se già in errore)
+ * Questo evita di mostrare errori troppo presto, migliorando UX
+ *
+ * SUBMIT FLOW:
+ * 1. Intercetta evento submit (preventDefault)
+ * 2. Valida tutti i campi
+ * 3. Se errori: mostra messaggi e blocca submit
+ * 4. Se OK: determina se CREATE (POST) o UPDATE (PATCH)
+ * 5. Invia dati al backend
+ * 6. Gestisce risposta: successo → chiude modale, errore → mostra alert
+ *
+ * @returns {void}
+ */
 function setupProductForm() {
   const productForm = document.getElementById("productForm");
+
+  // GUARD: Verifica che il form esista nel DOM
   if (!productForm) {
-    console.warn("⚠️ Product form non trovato");
     return;
   }
 
-  // Funzioni di validazione
+  // ========================================
+  // FUNZIONI DI VALIDAZIONE
+  // ========================================
+  // Queste funzioni contengono la logica di validazione per ogni tipo di campo
+
+  /**
+   * Valida campi obbligatori
+   * @param {string} value - Valore del campo
+   * @param {string} fieldName - Nome descrittivo del campo per messaggio errore
+   * @returns {string} Messaggio di errore o stringa vuota se valido
+   */
   function validateRequired(value, fieldName) {
     if (!value || value.trim() === "") {
       return `${fieldName} è obbligatorio`;
     }
-    return "";
+    return ""; // Vuoto = nessun errore
   }
 
+  /**
+   * Valida il campo prezzo
+   * Deve essere un numero positivo maggiore di 0
+   * @param {string} value - Valore del campo prezzo
+   * @returns {string} Messaggio di errore o stringa vuota se valido
+   */
   function validatePrezzo(value) {
     if (!value) return "Il prezzo è obbligatorio";
+
     const prezzo = parseFloat(value);
+
+    // Controlla che sia un numero valido e maggiore di 0
     if (isNaN(prezzo) || prezzo <= 0) {
       return "Inserisci un prezzo valido maggiore di 0";
     }
-    return "";
+
+    return ""; // Valido
   }
 
+  /**
+   * Mostra feedback visivo per un campo del form
+   *
+   * Gestisce 3 stati visivi:
+   * 1. Errore: bordo rosso + messaggio errore visibile
+   * 2. Successo: bordo verde + messaggio nascosto
+   * 3. Neutro: nessun bordo speciale
+   *
+   * @param {HTMLElement} input - Elemento input da modificare
+   * @param {HTMLElement} errorSpan - Span dove mostrare messaggio errore
+   * @param {string} message - Messaggio di errore (vuoto se nessun errore)
+   */
   function showFieldError(input, errorSpan, message) {
+    // GUARD: Se elementi non esistono, esce silenziosamente
     if (!input || !errorSpan) return;
 
     if (message) {
-      input.classList.add("input-error");
-      input.classList.remove("input-success");
-      errorSpan.textContent = message;
-      errorSpan.style.display = "block";
+      // STATO ERRORE
+      input.classList.add("input-error"); // Aggiunge bordo rosso
+      input.classList.remove("input-success"); // Rimuove bordo verde
+      errorSpan.textContent = message; // Mostra messaggio errore
+      errorSpan.style.display = "block"; // Rende visibile lo span
     } else {
-      input.classList.remove("input-error");
-      input.classList.add("input-success");
-      errorSpan.textContent = "";
-      errorSpan.style.display = "none";
+      // STATO SUCCESSO
+      input.classList.remove("input-error"); // Rimuove bordo rosso
+      input.classList.add("input-success"); // Aggiunge bordo verde
+      errorSpan.textContent = ""; // Nasconde messaggio errore
+      errorSpan.style.display = "none"; // Nasconde lo span
     }
   }
 
-  // Gestisci eventi del form
+  // ========================================
+  // ATTACCO EVENT LISTENERS PER VALIDAZIONE REAL-TIME
+  // ========================================
+  /**
+   * Configura i listener per validazione in tempo reale su tutti i campi
+   */
   function attachFormValidation() {
-    // Elementi del form
+    // Ottieni riferimenti a tutti gli input del form
     const titoloInput = document.getElementById("product-titolo");
     const descrizioneInput = document.getElementById("product-descrizione");
     const autoreInput = document.getElementById("product-autore");
@@ -286,6 +530,7 @@ function setupProductForm() {
     const imageInput = document.getElementById("product-image");
     const categoriaInput = document.getElementById("product-categoria");
 
+    // Ottieni riferimenti a tutti gli span per messaggi errore
     const titoloError = document.getElementById("productTitoloError");
     const descrizioneError = document.getElementById("productDescrizioneError");
     const autoreError = document.getElementById("productAutoreError");
@@ -293,6 +538,7 @@ function setupProductForm() {
     const imageError = document.getElementById("productImageError");
     const categoriaError = document.getElementById("productCategoriaError");
 
+    // GUARD: Verifica che tutti gli elementi necessari esistano
     if (
       !titoloInput ||
       !descrizioneInput ||
@@ -301,16 +547,20 @@ function setupProductForm() {
       !imageInput ||
       !categoriaInput
     ) {
-      console.warn("⚠️ Alcuni campi del form non sono stati trovati");
       return;
     }
 
-    // Validazione in tempo reale per tutti i campi
+    // ========================================
+    // VALIDAZIONE TITOLO
+    // ========================================
+    // Evento blur: valida quando l'utente esce dal campo
     titoloInput.addEventListener("blur", () => {
       const error = validateRequired(titoloInput.value, "Il titolo");
       showFieldError(titoloInput, titoloError, error);
     });
 
+    // Evento input: valida solo se il campo è già in stato errore
+    // Questo fornisce feedback immediato durante la correzione
     titoloInput.addEventListener("input", () => {
       if (titoloInput.classList.contains("input-error")) {
         const error = validateRequired(titoloInput.value, "Il titolo");
@@ -318,6 +568,9 @@ function setupProductForm() {
       }
     });
 
+    // ========================================
+    // VALIDAZIONE DESCRIZIONE
+    // ========================================
     descrizioneInput.addEventListener("blur", () => {
       const error = validateRequired(descrizioneInput.value, "La descrizione");
       showFieldError(descrizioneInput, descrizioneError, error);
@@ -333,6 +586,9 @@ function setupProductForm() {
       }
     });
 
+    // ========================================
+    // VALIDAZIONE AUTORE
+    // ========================================
     autoreInput.addEventListener("blur", () => {
       const error = validateRequired(autoreInput.value, "L'autore");
       showFieldError(autoreInput, autoreError, error);
@@ -345,6 +601,10 @@ function setupProductForm() {
       }
     });
 
+    // ========================================
+    // VALIDAZIONE PREZZO
+    // ========================================
+    // Usa validatePrezzo() che controlla sia obbligatorietà che formato
     prezzoInput.addEventListener("blur", () => {
       const error = validatePrezzo(prezzoInput.value);
       showFieldError(prezzoInput, prezzoError, error);
@@ -357,7 +617,9 @@ function setupProductForm() {
       }
     });
 
-    // Validazione in tempo reale per immagine
+    // ========================================
+    // VALIDAZIONE IMMAGINE
+    // ========================================
     imageInput.addEventListener("blur", () => {
       const error = validateRequired(imageInput.value, "Il percorso immagine");
       showFieldError(imageInput, imageError, error);
@@ -373,7 +635,10 @@ function setupProductForm() {
       }
     });
 
-    // Validazione in tempo reale per categoria
+    // ========================================
+    // VALIDAZIONE CATEGORIA
+    // ========================================
+    // Usa "change" invece di "input" perché è una select
     categoriaInput.addEventListener("blur", () => {
       const error = validateRequired(categoriaInput.value, "La categoria");
       showFieldError(categoriaInput, categoriaError, error);
@@ -385,13 +650,32 @@ function setupProductForm() {
     });
   }
 
-  // Attacca i listener inizialmente
+  // Attiva i listener di validazione al caricamento
   attachFormValidation();
 
-  // Gestione submit del form
+  // ========================================
+  // GESTIONE SUBMIT FORM
+  // ========================================
+  /**
+   * Handler per il submit del form prodotto
+   *
+   * Gestisce sia la creazione che la modifica di prodotti,
+   * determinando automaticamente quale operazione eseguire
+   * in base alla presenza o meno dell'ID prodotto.
+   *
+   *
+   * API ENDPOINTS:
+   * - POST /api/admin/prodotti.php → crea nuovo
+   * - PATCH /api/admin/prodotti.php → modifica esistente
+   *
+   * RISPOSTA ATTESA: { success: true/false, message: "..." }
+   */
   productForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Blocca submit HTML standard
 
+    // ========================================
+    // STEP 1: RACCOLTA VALORI DAI CAMPI
+    // ========================================
     const productId = document.getElementById("product-id").value;
     const titolo = document.getElementById("product-titolo").value.trim();
     const descrizione = document
@@ -402,7 +686,10 @@ function setupProductForm() {
     const imagePath = document.getElementById("product-image").value.trim();
     const idCategoria = document.getElementById("product-categoria").value;
 
-    // Validazione finale
+    // ========================================
+    // STEP 2: VALIDAZIONE FINALE
+    // ========================================
+    // Valida tutti i campi prima di inviare
     const titoloErr = validateRequired(titolo, "Il titolo");
     const descrizioneErr = validateRequired(descrizione, "La descrizione");
     const autoreErr = validateRequired(autore, "L'autore");
@@ -410,6 +697,7 @@ function setupProductForm() {
     const imageErr = validateRequired(imagePath, "Il percorso immagine");
     const categoriaErr = validateRequired(idCategoria, "La categoria");
 
+    // Mostra feedback visivo per tutti i campi
     showFieldError(
       document.getElementById("product-titolo"),
       document.getElementById("productTitoloError"),
@@ -441,6 +729,7 @@ function setupProductForm() {
       categoriaErr,
     );
 
+    // Se c'è almeno un errore, blocca il submit
     if (
       titoloErr ||
       descrizioneErr ||
@@ -450,30 +739,44 @@ function setupProductForm() {
       categoriaErr
     ) {
       showToast("Correggi gli errori nel form", "error");
-      return;
+      return; // BLOCCA INVIO
     }
 
+    // ========================================
+    // STEP 3: PREPARAZIONE DATI
+    // ========================================
+    // Costruisci oggetto con i dati da inviare al backend
     const productData = {
       titolo: titolo,
       descrizione: descrizione,
       autore: autore,
       prezzo: prezzo,
       image_path: imagePath,
-      id_categoria: idCategoria || null,
+      id_categoria: idCategoria || null, // null se non selezionata
     };
 
+    // ========================================
+    // STEP 4: INVIO AL BACKEND
+    // ========================================
     try {
       let response;
+
       if (productId) {
-        //modifica (PATCH)
+        // ===== MODIFICA PRODOTTO ESISTENTE =====
+        // Aggiungi ID ai dati per identificare quale prodotto modificare
         productData.id = productId;
+
+        // Invia richiesta PATCH per aggiornare
         response = await fetch("api/admin/prodotti.php", {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json", // Indica che il body è JSON
+          },
           body: JSON.stringify(productData),
         });
       } else {
-        //creazione (POST)
+        // ===== CREAZIONE NUOVO PRODOTTO =====
+        // Invia richiesta POST per creare
         response = await fetch("api/admin/prodotti.php", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -481,89 +784,137 @@ function setupProductForm() {
         });
       }
 
+      // ========================================
+      // STEP 5: GESTIONE RISPOSTA
+      // ========================================
       const data = await response.json();
 
       if (data.success) {
+        // SUCCESSO: chiudi modale, ricarica tabella, mostra conferma
         closeProductModal();
-        await loadProducts();
+        await loadProducts(); // Ricarica lista prodotti aggiornata
         showToast(data.message || "Prodotto salvato con successo!", "success");
       } else {
+        // ERRORE BACKEND: mostra messaggio dal server
         showError("Errore: " + data.message, "error");
       }
     } catch (error) {
+      // ERRORE DI RETE: connessione fallita o parsing JSON fallito
       console.error("Errore:", error);
       showError("Errore di connessione durante il salvataggio", "error");
     }
   });
 }
 
-//ELIMINA PRODOTTO
-//funzione per eliminare prodotto
+// ========================================
+// ELIMINAZIONE PRODOTTO
+// ========================================
+
+/**
+ * Avvia il processo di eliminazione di un prodotto
+ *
+ * Non elimina immediatamente, ma apre un modale di conferma
+ * per evitare eliminazioni accidentali (azione distruttiva).
+ * @param {number} productId - ID del prodotto da eliminare
+ * @returns {void}
+ */
 async function deleteProduct(productId) {
-  //salva id dentro variabile dichiarata all'inizio
+  // Salva ID in variabile globale per usarlo nella conferma
   productToDeleteId = productId;
 
-  //apre modale
+  // Apre modale di conferma
   const modal = document.getElementById("deleteConfirmModal");
-  modal.classList.add("show"); // Opzionale se usi classi per animazioni
-  modal.style.display = "flex"; //per centrarla bene
+  modal.classList.add("show"); // Classe opzionale per animazioni CSS
+  modal.style.display = "flex"; // Display flex per centratura verticale/orizzontale
 }
 
-//modale di conferma per eliminare prodotto
+/**
+ * Configura il modale di conferma eliminazione prodotto
+ * API: DELETE /api/admin/prodotti.php
+ * Body: { id: productId }
+ * CHIAMATA DA: initAdminPage() durante inizializzazione
+ *
+ * @returns {void}
+ */
 function setupDeleteModal() {
   const modal = document.getElementById("deleteConfirmModal");
   const confirmBtn = document.getElementById("confirmDeleteBtn");
   const cancelBtn = document.getElementById("cancelDeleteBtn");
 
-  //se schiacci conferma dentro la modale
+  // ===== CONFERMA ELIMINAZIONE =====
   confirmBtn.addEventListener("click", async () => {
+    // Verifica che ci sia un ID salvato
     if (productToDeleteId) {
-      //chiama la API per eliminare
       try {
+        // Invia richiesta DELETE al backend
         const response = await fetch("api/admin/prodotti.php", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: productToDeleteId }),
         });
+
         const data = await response.json();
 
         if (data.success) {
+          // Successo: feedback positivo e aggiorna UI
           showToast("Prodotto eliminato con successo!", "success");
           closeDeleteModal(); // Chiudi modale
-          await loadProducts(); // Ricarica tabella
+          await loadProducts(); // Ricarica tabella aggiornata
         } else {
+          // Errore backend: mostra messaggio
           showError("Errore: " + data.message);
         }
       } catch (error) {
+        // Errore rete
         showError("Errore durante l'eliminazione");
       }
     }
   });
 
-  //se schiacci annulla dentrro la modale
+  // ===== ANNULLA ELIMINAZIONE =====
   cancelBtn.addEventListener("click", closeDeleteModal);
 
-  //chiude se clicchi fuori dalla modale
+  // ===== CHIUDI CLICCANDO FUORI =====
   window.addEventListener("click", (e) => {
     if (e.target === modal) closeDeleteModal();
   });
 }
 
+/**
+ * Chiude il modale di conferma eliminazione
+ * Resetta anche la variabile globale productToDeleteId
+ *
+ * @returns {void}
+ */
 function closeDeleteModal() {
   document.getElementById("deleteConfirmModal").style.display = "none";
-  productToDeleteId = null; // Resetta l'ID
+  productToDeleteId = null; // Pulisci variabile globale
 }
 
-// ===== GESTIONE UTENTI =====
+// ========================================
+// GESTIONE UTENTI
+// ========================================
+// Gli admin possono visualizzare tutti gli utenti e gestire:
+// - Blocco/Sblocco account
+// - Promozione/Rimozione ruolo admin
+// Non possono modificare se stessi per sicurezza
 
+/**
+ * Carica tutti gli utenti dal backend tramite API
+ *
+ * API ENDPOINT: GET /api/admin/utenti.php
+ *
+ * @async
+ * @returns {Promise<void>}
+ */
 async function loadUsers() {
   try {
     const response = await fetch("api/admin/utenti.php");
     const data = await response.json();
 
     if (data.success) {
-      allUsers = data.utenti;
-      displayUsers();
+      allUsers = data.utenti; // Salva in cache globale
+      displayUsers(); // Renderizza immediatamente la tabella
     } else {
       showError("Errore caricamento utenti");
     }
@@ -573,20 +924,30 @@ async function loadUsers() {
   }
 }
 
+/**
+ * Renderizza la tabella degli utenti nell'interfaccia admin
+ *
+ * Costruisce dinamicamente una tabella HTML con tutti gli utenti,
+ * mostrando stato, ruolo e azioni disponibili per ciascuno.
+ *
+ * @returns {void}
+ */
 function displayUsers() {
   const container = document.getElementById("utenti-list");
 
+  // GUARD: Verifica esistenza container
   if (!container) {
-    console.warn("⚠️ Container utenti-list non trovato");
     return;
   }
 
+  // CASO 1: Nessun utente - mostra empty state
   if (allUsers.length === 0) {
     container.innerHTML =
       '<div class="empty-state"><p>Nessun utente trovato</p></div>';
     return;
   }
 
+  // CASO 2: Costruisci tabella HTML dinamicamente
   let html = `
         <table>
             <thead>
@@ -602,17 +963,27 @@ function displayUsers() {
             </thead>
             <tbody>
     `;
+
+  // Itera su ogni utente e crea una riga
   allUsers.forEach((user) => {
+    // Determina se questo utente è l'admin correntemente loggato
     const isCurrentUser = currentUser && user.id == currentUser.id_utente;
+
+    // Crea badge ruolo: admin (arancione) o user (blu)
     const roleBadge =
       user.ruolo == 1
         ? '<span class="badge badge-admin">Admin</span>'
         : '<span class="badge badge-user">Utente</span>';
+
+    // Determina stato blocco
     const isBlocked = user.blocked == 1;
+
+    // Crea badge stato: bloccato (rosso) o attivo (verde)
     const statusBadge = isBlocked
       ? '<span class="badge badge-blocked">Bloccato</span>'
       : '<span class="badge badge-active">Attivo</span>';
 
+    // Costruisci riga con classe condizionale se utente bloccato
     html += `
             <tr ${isBlocked ? 'class="blocked-user"' : ""}>
                 <td>${user.id}</td>
@@ -622,185 +993,106 @@ function displayUsers() {
                 <td>${statusBadge}</td>
                 <td>${user.num_ordini || 0}</td>
                 <td class="actions-cell">
-                    ${
-                      !isCurrentUser
-                        ? `
-                        ${
-                          user.ruolo == 1
-                            ? `<button class="btn btn-small btn-secondary" onclick="toggleAdminRole(${user.id}, 0)">Rimuovi Admin</button>`
-                            : `<button class="btn btn-small btn-success" onclick="toggleAdminRole(${user.id}, 1)">Rendi Admin</button>`
-                        }
-                        ${
-                          isBlocked
-                            ? `<button class="btn btn-small btn-success" onclick="toggleBlockUser(${user.id}, 0)">Sblocca</button>`
-                            : `<button class="btn btn-small btn-danger" onclick="toggleBlockUser(${user.id}, 1)">Blocca</button>`
-                        }
-                    `
-                        : '<span class="current-user-badge">Tu</span>'
-                    }
+    `;
+
+    // LOGICA AZIONI: Se è l'utente corrente, non mostra bottoni
+    if (!isCurrentUser) {
+      // BOTTONE CAMBIO RUOLO (condizionale)
+      if (user.ruolo == 1) {
+        // È admin → mostra "Rimuovi Admin"
+        html += `<button class="btn btn-small btn-secondary" onclick="toggleAdminRole(${user.id}, 0)">Rimuovi Admin</button>`;
+      } else {
+        // È utente normale → mostra "Rendi Admin"
+        html += `<button class="btn btn-small btn-success" onclick="toggleAdminRole(${user.id}, 1)">Rendi Admin</button>`;
+      }
+
+      // BOTTONE BLOCCO/SBLOCCO (condizionale)
+      if (isBlocked) {
+        // È bloccato → mostra "Sblocca"
+        html += `<button class="btn btn-small btn-success" onclick="toggleBlockUser(${user.id}, 0)">Sblocca</button>`;
+      } else {
+        // È attivo → mostra "Blocca"
+        html += `<button class="btn btn-small btn-danger" onclick="toggleBlockUser(${user.id}, 1)">Blocca</button>`;
+      }
+    } else {
+      // È l'utente corrente → mostra solo badge "Tu"
+      html += '<span class="current-user-badge">Tu</span>';
+    }
+
+    html += `
                 </td>
             </tr>
         `;
   });
 
   html += "</tbody></table>";
-  container.innerHTML = html;
+  container.innerHTML = html; // Inietta HTML nel DOM
 }
 
-async function viewUserDetail(userId) {
-  try {
-    const response = await fetch(`api/admin/utenti.php?id=${userId}`);
-    const data = await response.json();
+// ========================================
+// BLOCCO/SBLOCCO UTENTE
+// ========================================
 
-    if (data.success) {
-      displayUserDetail(data.utente, data.ordini);
-    } else {
-      alert("Errore: " + data.message);
-    }
-  } catch (error) {
-    console.error("Errore:", error);
-    alert("Errore durante il caricamento dei dettagli utente");
-  }
-}
-
-function displayUserDetail(user, ordini) {
-  const roleBadge =
-    user.ruolo == 1
-      ? '<span class="badge badge-admin">Admin</span>'
-      : '<span class="badge badge-user">Utente</span>';
-  const statusBadge = '<span class="badge badge-active">Attivo</span>';
-
-  let html = `
-        <div class="user-detail">
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <strong>Nome Completo</strong>
-                    <span>${user.nome} ${user.cognome}</span>
-                </div>
-                <div class="detail-item">
-                    <strong>Email</strong>
-                    <span>${user.mail}</span>
-                </div>
-                <div class="detail-item">
-                    <strong>Telefono</strong>
-                    <span>${user.telefono || "N/A"}</span>
-                </div>
-                <div class="detail-item">
-                    <strong>Città</strong>
-                    <span>${user.citta || "N/A"}</span>
-                </div>
-                <div class="detail-item">
-                    <strong>Provincia</strong>
-                    <span>${user.provincia || "N/A"}</span>
-                </div>
-                <div class="detail-item">
-                    <strong>CAP</strong>
-                    <span>${user.cap || "N/A"}</span>
-                </div>
-                <div class="detail-item">
-                    <strong>Via</strong>
-                    <span>${user.via || "N/A"}</span>
-                </div>
-                <div class="detail-item">
-                    <strong>Ruolo</strong>
-                    ${roleBadge}
-                </div>
-                <div class="detail-item">
-                    <strong>Stato</strong>
-                    ${statusBadge}
-                </div>
-                <div class="detail-item">
-                    <strong>Totale Ordini</strong>
-                    <span>${user.num_ordini || 0}</span>
-                </div>
-            </div>
-            
-            <div class="orders-list">
-                <h4>Storico Ordini</h4>
-    `;
-
-  if (ordini.length === 0) {
-    html += '<p style="color: var(--text-soft);">Nessun ordine effettuato</p>';
-  } else {
-    html += `
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID Ordine</th>
-                        <th>Data</th>
-                        <th>Totale</th>
-                        <th>N° Prodotti</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-
-    ordini.forEach((ordine) => {
-      const data = new Date(ordine.data).toLocaleDateString("it-IT");
-      html += `
-                <tr>
-                    <td>#${ordine.id}</td>
-                    <td>${data}</td>
-                    <td>€${parseFloat(ordine.totale).toFixed(2)}</td>
-                    <td>${ordine.num_prodotti}</td>
-                </tr>
-            `;
-    });
-
-    html += "</tbody></table>";
-  }
-
-  html += "</div></div>";
-
-  document.getElementById("userDetail").innerHTML = html;
-  document.getElementById("userModal").style.display = "block";
-}
-
-function closeUserModal() {
-  document.getElementById("userModal").style.display = "none";
-}
-
-// BLOCCO UTENTE
-//funzione per bloccare
+/**
+ * Avvia il processo di blocco o sblocco di un utente
+ *
+ * Non modifica immediatamente, ma apre un modale di conferma
+ * con messaggio personalizzato in base all'azione.
+ *
+ * @param {number} userId - ID dell'utente da bloccare/sbloccare
+ * @param {number} blocked - Stato target (1=blocca, 0=sblocca)
+ * @returns {void}
+ */
 async function toggleBlockUser(userId, blocked) {
-  // salva dati nelle variabili globali
+  // Salva dati nelle variabili globali per usarli nella conferma
   userToBlockId = userId;
   blockStatus = blocked;
 
-  //interfaccia modale
+  // Ottieni riferimenti agli elementi del modale
   const modal = document.getElementById("blockUserConfirmModal");
   const title = document.getElementById("blockModalTitle");
   const msg = document.getElementById("blockModalMessage");
   const btn = document.getElementById("confirmBlockBtn");
 
+  // Configura testi e stili in base all'azione
   if (blocked == 1) {
-    // se blocca
+    // ===== BLOCCO UTENTE =====
     title.textContent = "Blocca Utente";
     msg.textContent = "L'utente non potrà più accedere al sito. Sei sicuro?";
     btn.textContent = "Blocca";
-    btn.className = "btn btn-danger"; // Rosso
+    btn.className = "btn btn-danger"; // Rosso (azione distruttiva)
   } else {
-    // se sblocca
+    // ===== SBLOCCO UTENTE =====
     title.textContent = "Sblocca Utente";
     msg.textContent = "L'utente potrà nuovamente accedere al sito. Sei sicuro?";
     btn.textContent = "Sblocca";
-    btn.className = "btn btn-success"; // Verde (assicurati di avere questa classe nel CSS, o usa btn-primary)
+    btn.className = "btn btn-success"; // Verde (azione positiva)
   }
 
-  // mostra modale
+  // Mostra il modale
   modal.style.display = "flex";
 }
 
-//modale per conferma blocco utente
+/**
+ * Configura il modale di conferma blocco/sblocco utente
+ *
+ * API: PATCH /api/admin/utenti.php
+ * Body: { id: userId, blocked: 1|0 }
+ * CHIAMATA DA: initAdminPage() durante inizializzazione
+ *
+ * @returns {void}
+ */
 function setupBlockUserModal() {
   const modal = document.getElementById("blockUserConfirmModal");
   const confirmBtn = document.getElementById("confirmBlockBtn");
   const cancelBtn = document.getElementById("cancelBlockBtn");
 
-  //se schiacci conferma dentro la modale
+  // ===== CONFERMA BLOCCO/SBLOCCO =====
   confirmBtn.addEventListener("click", async () => {
+    // Verifica che ci siano dati salvati
     if (userToBlockId !== null && blockStatus !== null) {
       try {
+        // Invia richiesta PATCH al backend
         const response = await fetch("api/admin/utenti.php", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -810,11 +1102,13 @@ function setupBlockUserModal() {
         const data = await response.json();
 
         if (data.success) {
+          // Successo: feedback positivo e aggiorna UI
           showToast(data.message, "success");
           closeBlockModal(); // Chiudi modale
           await loadUsers(); // Ricarica tabella utenti
-          updateDashboardStats(); // Aggiorna i contatori in alto
+          updateDashboardStats(); // Aggiorna contatore utenti bloccati
         } else {
+          // Errore backend
           showError("Errore: " + data.message);
         }
       } catch (error) {
@@ -824,75 +1118,102 @@ function setupBlockUserModal() {
     }
   });
 
-  //se clicchi annulla
+  // ===== ANNULLA =====
   cancelBtn.addEventListener("click", closeBlockModal);
 
-  //chiude cliccando fuori
+  // ===== CHIUDI CLICCANDO FUORI =====
   window.addEventListener("click", (e) => {
     if (e.target === modal) closeBlockModal();
   });
 }
 
+/**
+ * Chiude il modale di blocco/sblocco e resetta variabili globali
+ * @returns {void}
+ */
 function closeBlockModal() {
   document.getElementById("blockUserConfirmModal").style.display = "none";
-  userToBlockId = null;
+  userToBlockId = null; // Pulisci variabili globali
   blockStatus = null;
 }
 
-// ADMIN UTENTE
-//funzione
+// ========================================
+// GESTIONE RUOLO ADMIN
+// ========================================
+
+/**
+ * Avvia il processo di cambio ruolo per un utente
+ *
+ * Permette di promuovere un utente normale ad admin o viceversa.
+ *
+ * @param {number} userId - ID dell'utente da modificare
+ * @param {number} ruolo - Ruolo target (1=admin, 0=user)
+ * @returns {void}
+ */
 async function toggleAdminRole(userId, ruolo) {
-  //recupera dati utente da array
+  // Trova l'utente nell'array caricato
   const user = allUsers.find((u) => u.id == userId);
 
-  //controllo: impossibile rendere admin un utente bloccato
+  // BUSINESS RULE: Utenti bloccati non possono diventare admin
+  // GUARD CLAUSE: Verifica e blocca immediatamente se violata
   if (ruolo == 1 && user && user.blocked == 1) {
     showError(
       "Impossibile rendere Amministratore un utente bloccato. Devi prima sbloccarlo.",
     );
-    return;
+    return; // Blocca operazione
   }
 
-  // salva dati nelle variabili globali
+  // Salva dati nelle variabili globali per usarli nella conferma
   userToToggleRoleId = userId;
   roleTarget = ruolo;
 
-  //interfaccia modale
+  // Ottieni riferimenti agli elementi del modale
   const modal = document.getElementById("adminRoleConfirmModal");
   const title = document.getElementById("adminRoleModalTitle");
   const msg = document.getElementById("adminRoleModalMessage");
   const btn = document.getElementById("confirmAdminRoleBtn");
 
+  // Configura testi e stili in base all'azione
   if (ruolo == 1) {
-    // promuove a admin
+    // ===== PROMOZIONE AD ADMIN =====
     title.textContent = "Promuovi ad Admin";
     msg.textContent =
       "Questo utente avrà accesso completo alla dashboard di amministrazione.";
     btn.textContent = "Promuovi";
-    btn.className = "btn btn-success";
+    btn.className = "btn btn-success"; // Verde
   } else {
-    // rimuove da admin
+    // ===== RIMOZIONE RUOLO ADMIN =====
     title.textContent = "Rimuovi Admin";
     msg.textContent =
       "L'utente perderà l'accesso alla dashboard di amministrazione.";
     btn.textContent = "Rimuovi";
-    btn.className = "btn btn-danger";
+    btn.className = "btn btn-danger"; // Rosso
   }
 
-  //mostra modale
+  // Mostra il modale
   modal.style.display = "flex";
 }
 
-//modale
+/**
+ * Configura il modale di conferma cambio ruolo
+ *
+ * API: PATCH /api/admin/utenti.php
+ * Body: { id: userId, ruolo: 1|0 }
+ * CHIAMATA DA: initAdminPage() durante inizializzazione
+ *
+ * @returns {void}
+ */
 function setupAdminRoleModal() {
   const modal = document.getElementById("adminRoleConfirmModal");
   const confirmBtn = document.getElementById("confirmAdminRoleBtn");
   const cancelBtn = document.getElementById("cancelAdminRoleBtn");
 
-  //se schiaccia conferma
+  // ===== CONFERMA CAMBIO RUOLO =====
   confirmBtn.addEventListener("click", async () => {
+    // Verifica che ci siano dati salvati
     if (userToToggleRoleId !== null && roleTarget !== null) {
       try {
+        // Invia richiesta PATCH al backend
         const response = await fetch("api/admin/utenti.php", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -902,12 +1223,14 @@ function setupAdminRoleModal() {
         const data = await response.json();
 
         if (data.success) {
+          // Successo: feedback e aggiorna UI
           if (typeof showToast === "function")
             showToast(data.message, "success");
           closeAdminRoleModal();
-          await loadUsers(); // Ricarica la tabella
-          updateDashboardStats(); // Aggiorna i contatori
+          await loadUsers(); // Ricarica tabella utenti
+          updateDashboardStats(); // Aggiorna contatore admin
         } else {
+          // Errore backend
           showError("Errore: " + data.message);
         }
       } catch (error) {
@@ -917,106 +1240,166 @@ function setupAdminRoleModal() {
     }
   });
 
-  // se schiaccia annulla
+  // ===== ANNULLA =====
   cancelBtn.addEventListener("click", closeAdminRoleModal);
 
-  // chiude se click fuori da finestra
+  // ===== CHIUDI CLICCANDO FUORI =====
   window.addEventListener("click", (e) => {
     if (e.target === modal) closeAdminRoleModal();
   });
 }
 
+/**
+ * Chiude il modale di cambio ruolo e resetta variabili globali
+ * @returns {void}
+ */
 function closeAdminRoleModal() {
   document.getElementById("adminRoleConfirmModal").style.display = "none";
-  userToToggleRoleId = null;
+  userToToggleRoleId = null; // Pulisci variabili globali
   roleTarget = null;
 }
 
-// ===== NAVIGAZIONE =====
+// ========================================
+// NAVIGAZIONE TABS
+// ========================================
 
+/**
+ * Configura la navigazione tra le tabs della dashboard
+ *
+ * La dashboard ha due sezioni principali:
+ * 1. Gestione Prodotti (products-section)
+ * 2. Gestione Utenti (users-section)
+ * CHIAMATA DA: initAdminPage() durante inizializzazione
+ *
+ * @returns {void}
+ */
 function setupNavigation() {
+  // Ottieni tutti i bottoni tab e le sezioni contenuto
   const tabs = document.querySelectorAll(".admin-tab");
   const sections = document.querySelectorAll(".admin-section-content");
 
+  // Configura listener per ogni tab
   tabs.forEach((tab) => {
     tab.addEventListener("click", (e) => {
-      e.preventDefault();
+      e.preventDefault(); // Previeni comportamento link default
 
-      // Rimuovi active da tutti
+      // STEP 1: Rimuovi classe "active" da tutto
       tabs.forEach((t) => t.classList.remove("active"));
       sections.forEach((s) => s.classList.remove("active"));
 
-      // Aggiungi active al tab cliccato
+      // STEP 2: Aggiungi "active" alla tab cliccata
       tab.classList.add("active");
 
-      // Mostra la sezione corrispondente
-      const tabName = tab.dataset.tab;
-      const sectionId = tabName + "-section";
+      // STEP 3: Mostra la sezione corrispondente
+      const tabName = tab.dataset.tab; // Es: "products" o "users"
+      const sectionId = tabName + "-section"; // Es: "products-section"
       const section = document.getElementById(sectionId);
+
       if (section) {
-        section.classList.add("active");
+        section.classList.add("active"); // Rende visibile la sezione
       }
     });
   });
 
-  // Event listener per pulsante Aggiungi Prodotto
+  // ===== BOTTONE AGGIUNGI PRODOTTO =====
   const addProductBtn = document.getElementById("addProductBtn");
   if (addProductBtn) {
     addProductBtn.addEventListener("click", () => {
-      openAddProductModal();
+      openAddProductModal(); // Apre modale in modalità creazione
     });
   }
 
-  // Event listener per chiusura modal prodotto
+  // ===== LISTENER CHIUSURA MODALI =====
+  // Bottone X per chiudere modale prodotto
   const closeProductModalBtn = document.getElementById("closeProductModal");
   if (closeProductModalBtn) {
     closeProductModalBtn.addEventListener("click", closeProductModal);
   }
 
+  // Bottone Annulla nel form prodotto
   const cancelProductBtn = document.getElementById("cancelProductBtn");
   if (cancelProductBtn) {
     cancelProductBtn.addEventListener("click", closeProductModal);
   }
-
-  // Event listener per chiusura modal utente
-  const closeUserModalBtn = document.getElementById("closeUserModal");
-  if (closeUserModalBtn) {
-    closeUserModalBtn.addEventListener("click", closeUserModal);
-  }
 }
 
-// ===== UTILITY =====
+// ========================================
+// FUNZIONI UTILITY
+// ========================================
 
+/**
+ * Mostra un messaggio di errore all'utente tramite modale
+ *
+ * Apre un modale di errore personalizzato invece di usare alert() nativo,
+ * per mantenere coerenza con lo stile dell'applicazione.
+ *
+ * CHIAMATA DA: Tutte le funzioni che gestiscono errori
+ *
+ * @param {string} message - Messaggio di errore da mostrare
+ * @returns {void}
+ */
 function showError(message) {
-  alert(message);
-}
+  const modal = document.getElementById("errorModal");
+  const messageEl = document.getElementById("errorModalMessage");
 
-function logout() {
-  if (confirm("Sei sicuro di voler uscire?")) {
-    // Usa il metodo di logout dell'header component
-    fetch("api/auth/logout.php")
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          store.logout();
-          router.navigate("/home");
-        }
-      })
-      .catch((error) => {
-        console.error("Errore logout:", error);
-      });
+  if (modal && messageEl) {
+    messageEl.textContent = message;
+    modal.style.display = "flex";
+  } else {
+    // Fallback se il modale non esiste
+    alert(message);
   }
 }
 
-// Chiudi modal cliccando fuori
+/**
+ * Chiude il modale di errore
+ * @returns {void}
+ */
+function closeErrorModal() {
+  const modal = document.getElementById("errorModal");
+  if (modal) {
+    modal.style.display = "none";
+  }
+}
+
+/**
+ * Configura il modale di errore
+ * Gestisce il click sul bottone OK e click fuori dal modale
+ * @returns {void}
+ */
+function setupErrorModal() {
+  const modal = document.getElementById("errorModal");
+  const closeBtn = document.getElementById("closeErrorBtn");
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeErrorModal);
+  }
+
+  // Chiudi cliccando fuori dal contenuto
+  window.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      closeErrorModal();
+    }
+  });
+}
+
+/**
+ * Event listener globale per chiudere modali cliccando fuori
+ *
+ * PATTERN: Click Outside to Close
+ * - Se click avviene sul backdrop del modale (non sul contenuto)
+ * - Chiude il modale
+ *
+ * event.target verifica se il click è esattamente sul modale (backdrop)
+ * e non su un elemento figlio (il contenuto interno)
+ *
+ * @param {MouseEvent} event - Evento click globale
+ */
 window.onclick = function (event) {
   const productModal = document.getElementById("productModal");
-  const userModal = document.getElementById("userModal");
 
+  // Se click è sul backdrop del modale prodotto, chiudilo
   if (event.target == productModal) {
     closeProductModal();
-  }
-  if (event.target == userModal) {
-    closeUserModal();
   }
 };

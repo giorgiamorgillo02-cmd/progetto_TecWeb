@@ -10,10 +10,11 @@
   </div>
 </section>
 
-<!-- FILTRI -->
+<!-- SEZIONE FILTRI -->
 <section class="filters-section">
   <div class="container">
     <div class="filters-bar">
+      <!-- per categoria (select)-->
       <div class="filter-group">
         <label for="categoryFilter">Categoria:</label>
         <select id="categoryFilter" class="filter-select">
@@ -23,7 +24,7 @@
           <option value="3">Natura</option>
         </select>
       </div>
-
+      <!-- per ordinamento (select)-->
       <div class="filter-group">
         <label for="sortFilter">Ordina per:</label>
         <select id="sortFilter" class="filter-select">
@@ -32,7 +33,7 @@
           <option value="prezzo-desc">Prezzo decrescente</option>
         </select>
       </div>
-
+      <!-- per ricerca (input)-->
       <div class="search-box">
         <input
           type="text"
@@ -52,25 +53,25 @@
       <p id="productsCount">Caricamento prodotti...</p>
     </div>
 
-    <div class="products-grid" id="productsGrid">
-      <!-- I prodotti verranno caricati dinamicamente qui -->
-    </div>
+    <!-- div per caricare prodotti in modo dinamico -->
+    <div class="products-grid" id="productsGrid"></div>
 
+    <!-- div per messaggio loading -->
     <div class="loading-message" id="loadingMessage">
       <p>Caricamento prodotti in corso...</p>
     </div>
-
+    <!-- div per messaggio errore -->
     <div class="error-message" id="errorMessage" style="display: none">
       <p>Errore nel caricamento dei prodotti. Riprova più tardi.</p>
     </div>
-
+    <!-- div per messaggio nessun prodotto trovato -->
     <div class="empty-message" id="emptyMessage" style="display: none">
       <p>Nessun prodotto trovato.</p>
     </div>
   </div>
 </section>
 
-<!-- MODALE CARRELLO -->
+<!-- MODALE CARRELLO (compare quando si aggiunge al carrello)-->
 <div class="cart-modal" id="cartModal" style="display: none" aria-hidden="true">
   <div class="cart-modal-overlay" data-close="true"></div>
   <div
@@ -87,9 +88,8 @@
     </div>
 
     <div class="cart-modal-body">
-      <div class="cart-modal-products-list" id="cartModalProductsList">
-        <!-- I prodotti del carrello verranno inseriti qui dinamicamente -->
-      </div>
+      <!-- div per caricare prodotti all'interno del carrello -->
+      <div class="cart-modal-products-list" id="cartModalProductsList"></div>
 
       <div class="cart-modal-summary">
         <div class="cart-modal-row">
@@ -111,6 +111,7 @@
       </div>
     </div>
 
+    <!-- div per pulsanti azioni carrello (chiude modale o va al carrello) -->
     <div class="cart-modal-actions">
       <button class="btn btn-outline" type="button" data-close="true">
         Continua lo shopping

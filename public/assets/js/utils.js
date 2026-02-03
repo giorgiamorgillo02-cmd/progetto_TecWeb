@@ -1,16 +1,14 @@
-// Utils - Funzioni di utilità riutilizzabili
+//UTILS - FUNZIONI DI UTILITA RIUTILIZZABILI
 
-//variabile globale per definizione del percorso delle immagini
-window.image_path = "assets/img/";
-
-// Toast notifications
-let toastTimeout;
+// -----------MESSAGGI E NOTIFICHE-----------
+// NOTIFICHE TOAST
+let toastTimeout; //variabile esterna per gestire timer scompersa
 
 function showToast(message, type = "normal") {
-  const toast = document.getElementById("toast");
-  if (!toast) return;
+  const toast = document.getElementById("toast"); //seleziona elemento
+  if (!toast) return; //se elemento non esiste -> esce
 
-  toast.textContent = message;
+  toast.textContent = message; //aggiorna contenuto con il messaggio del toast
 
   // Resetta le classi per evitare che rimanga rosso
   toast.className = "toast";
@@ -20,19 +18,22 @@ function showToast(message, type = "normal") {
     toast.classList.add("toast--error");
   }
 
-  toast.classList.add("toast--visible");
+  toast.classList.add("toast--visible"); //rende toast visibile
 
-  clearTimeout(toastTimeout);
+  clearTimeout(toastTimeout); //pulisce timer precedente (utile se utente clicca tante volte di seguito)
+  //imposta scompersa automatica
   toastTimeout = setTimeout(() => {
     toast.classList.remove("toast--visible");
   }, 2200);
 }
-// Mostra messaggi nei form
-function showMessage(message, type) {
-  const oldMsg = document.querySelector(".form-message");
-  if (oldMsg) oldMsg.remove();
 
-  const msgDiv = document.createElement("div");
+//MOSTRA MESSAGGI NEI FORM
+function showMessage(message, type) {
+  const oldMsg = document.querySelector(".form-message"); //cerca se esiste messaggio precedente
+  if (oldMsg) oldMsg.remove(); //se esiste -> lo rimuove
+
+  const msgDiv = document.createElement("div"); //crea elemento
+  //assegna stile
   msgDiv.className = `form-message ${type}`;
   msgDiv.textContent = message;
   msgDiv.style.cssText = `
@@ -43,6 +44,7 @@ function showMessage(message, type) {
     text-align: center;
   `;
 
+  //stili diversi in base al tipo di messaggio
   if (type === "success") {
     msgDiv.style.background = "#d4edda";
     msgDiv.style.color = "#155724";
@@ -54,55 +56,29 @@ function showMessage(message, type) {
   }
 
   const form = document.querySelector(".auth-form");
-  if (form) form.insertBefore(msgDiv, form.firstChild);
+  if (form) form.insertBefore(msgDiv, form.firstChild); //inserisce messaggio nel primo figlio del form
 }
 
-// Verifica autenticazione utente
-async function checkUserAuth() {
-  try {
-    const response = await fetch("api/me.php");
-    const data = await response.json();
+//MOSTRA ERRORE SE NON CARICA DETTAGLIO-PRODOTTO
+function showDetailError(
+  message,
+  containerId = "productDetailContainer",
+  returnLink = "prodotti",
+) {
+  const container = document.getElementById(containerId); //dove mostrare l'errore
+  if (!container) return; // se container non esiste -> esce
 
-    if (data.authenticated) {
-      //utente loggato aggiorna dati utenti
-      const userData = {
-        nome: data.nome,
-        cognome: data.cognome,
-        email: data.email,
-        is_admin: data.is_admin || false,
-        ruolo: data.is_admin ? "admin" : "user", // Aggiungi campo ruolo per compatibilità
-      };
-      store.setUser(userData);
-    } else {
-      // Verifica se l'utente è stato bloccato
-      if (data.blocked) {
-        showToast(
-          "Il tuo account è stato bloccato dall'amministratore.",
-          "error",
-        );
-        store.logout(); // Svuota carrello e dati utente
-        router.navigate("/home");
-      } else {
-        // mantiene carrello locale
-        store.clearUser();
-      }
-    }
-
-    return data;
-  } catch (error) {
-    console.error("Errore verifica autenticazione:", error);
-    return { authenticated: false };
-  }
+  container.innerHTML = `
+    <div class="error-message-box">
+      <h2>❌ ${message}</h2>
+      <a href="${returnLink}.html" class="btn btn-primary">Torna ai ${returnLink}</a>
+    </div>
+  `;
 }
 
-// Formatta prezzo
-function formatPrice(price) {
-  return `€${parseFloat(price).toFixed(2)}`;
-}
+// ----------- FUNZIONI DI VALIDAZIONE -----------
 
-// ===== FUNZIONI DI VALIDAZIONE =====
-
-// Valida campo obbligatorio
+// Valida campo obbligatorio (se vuoto -> messaggio dinamico che usa nome del campo)
 function validateRequired(value, fieldName) {
   if (!value || value.trim() === "") {
     return `${fieldName} è obbligatorio`;
@@ -115,14 +91,14 @@ function validateEmail(email) {
   if (!email || email.trim() === "") {
     return "L'email è obbligatoria";
   }
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; //pattern per verificare stuttura email
   if (!emailRegex.test(email.trim())) {
     return "Inserisci un'email valida";
   }
   return "";
 }
 
-// Valida password
+// Valida password (lunghezza minima)
 function validatePassword(password, minLength = 6) {
   if (!password || password.trim() === "") {
     return "La password è obbligatoria";
@@ -133,18 +109,19 @@ function validatePassword(password, minLength = 6) {
   return "";
 }
 
-// Valida conferma password
+// Valida conferma password (uguaglianza )
 function validatePasswordConfirm(password, confirmPassword) {
   if (!confirmPassword || confirmPassword.trim() === "") {
     return "Conferma la password";
   }
+  //confronto stringhe
   if (password !== confirmPassword) {
     return "Le password non coincidono";
   }
   return "";
 }
 
-// Valida telefono
+// Valida telefono (lunghezza e numerico)
 function validateTelefono(telefono) {
   if (!telefono || telefono.trim() === "") {
     return "Il telefono è obbligatorio";
@@ -159,7 +136,7 @@ function validateTelefono(telefono) {
   return "";
 }
 
-// Valida provincia
+// Valida provincia (2 lettere)
 function validateProvincia(provincia) {
   if (!provincia || provincia.trim() === "") {
     return "La provincia è obbligatoria";
@@ -173,7 +150,7 @@ function validateProvincia(provincia) {
   return "";
 }
 
-// Valida CAP
+// Valida CAP (5 cifre)
 function validateCap(cap) {
   if (!cap || cap.trim() === "") {
     return "Il CAP è obbligatorio";
@@ -187,7 +164,7 @@ function validateCap(cap) {
   return "";
 }
 
-// Valida prezzo
+// Valida prezzo (per admin e checkout)
 function validatePrezzo(prezzo) {
   if (!prezzo || prezzo.toString().trim() === "") {
     return "Il prezzo è obbligatorio";
@@ -201,8 +178,9 @@ function validatePrezzo(prezzo) {
 
 // Mostra/nascondi errore per un campo
 function showFieldError(input, errorSpan, message) {
-  if (!input || !errorSpan) return;
+  if (!input || !errorSpan) return; //se elementi non esistono ->esci
 
+  //applica stile a messaggio se giusto o sbagliato
   if (message) {
     input.classList.add("input-error");
     input.classList.remove("input-success");
@@ -220,11 +198,13 @@ function showFieldError(input, errorSpan, message) {
 function clearFormErrors(formElement) {
   if (!formElement) return;
 
+  //seleziona tutti i campi possibili nel form
   const inputs = formElement.querySelectorAll("input, select, textarea");
   inputs.forEach((input) => {
-    input.classList.remove("input-error", "input-success");
+    input.classList.remove("input-error", "input-success"); //rimuove tutti i feedback
   });
 
+  //seleziona span dedicati a errori e li resetta
   const errorSpans = formElement.querySelectorAll(".field-error");
   errorSpans.forEach((span) => {
     span.textContent = "";
@@ -236,19 +216,77 @@ function clearFormErrors(formElement) {
 async function checkEmailExists(email) {
   try {
     const response = await fetch(
-      `api/auth/registrazione.php?mail=${encodeURIComponent(email)}`,
+      `api/auth/registrazione.php?mail=${encodeURIComponent(email)}`, //pulisce mail da caratteri speciali
     );
     const data = await response.json();
-    return data.exists || false;
+    return data.exists || false; //true se esiste, falso se non esiste
   } catch (error) {
+    //se errore -> messaggio errore
     console.error("Errore verifica email:", error);
     return false;
   }
 }
 
-// Genera stile immagine prodotto
+// -------- ALTRO --------
+
+// VERIFICA AUTENTICAZIONE UTENTE
+async function checkUserAuth() {
+  try {
+    const response = await fetch("api/me.php"); //chiamata api per leggere sessione
+    const data = await response.json();
+
+    //se utente loggato -> crea oggetto con i dati puliti ricevuti dal server
+    if (data.authenticated) {
+      const userData = {
+        nome: data.nome,
+        cognome: data.cognome,
+        email: data.email,
+        is_admin: data.is_admin || false,
+        ruolo: data.is_admin ? "admin" : "user", // Aggiungi campo ruolo per compatibilità
+      };
+
+      //salva dati nello stato globale
+      store.setUser(userData);
+    }
+    //se utente non loggato/bloccato
+    else {
+      //se bloccato -> messaggio errore + svuota carrello + reinderizza a home
+      if (data.blocked) {
+        showToast(
+          "Il tuo account è stato bloccato dall'amministratore.",
+          "error",
+        );
+        store.logout(); // Svuota carrello e dati utente
+        router.navigate("/home");
+      }
+      //se non bloccato -> mantiene carrello locale
+      else {
+        // mantiene carrello locale
+        store.clearUser();
+      }
+    }
+
+    return data; //restituisce dati
+  } catch (error) {
+    // se errore -> messaggio errore
+    console.error("Errore verifica autenticazione:", error);
+    return { authenticated: false };
+  }
+}
+
+//FORMATTA PREZZO
+function formatPrice(price) {
+  return `€${parseFloat(price).toFixed(2)}`;
+}
+
+//GENERA STILE IMMAGINE PRODOTTO
 function getProductImageStyle(product) {
-  if (product.image_path && product.image_path.includes("pinterest.com")) {
+  //se immagine prodotto esiste -> applica proprieta css a immagine
+  if (product.image_path) {
+    return `background-image: url('${product.image_path}');`;
+  }
+  //se immagine non c'è -> applica gradiente
+  else {
     const colors = [
       "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
       "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
@@ -256,38 +294,41 @@ function getProductImageStyle(product) {
       "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
       "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
     ];
+    //assegna un gradiente al prodotto (id del prodotto / lunghezza array -> fa si che lo stesso prodotto ha sempre lo stesso colore)
     return `background: ${colors[product.id % colors.length]};`;
-  } else if (product.image_path) {
-    return `background-image: url('${product.image_path}');`;
   }
-  return "";
 }
 
-// Debounce function
+//DEBOUNCE
 function debounce(func, wait) {
-  let timeout;
+  let timeout; //memorizza timer attivo
+  //restituisce funzione potenziata (non scatta immediatamente)
   return function executedFunction(...args) {
+    //una volta passato tempo di attesa
     const later = () => {
-      clearTimeout(timeout);
-      func(...args);
+      clearTimeout(timeout); //pulisce timer
+      func(...args); //esegue funzone originale
     };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
+
+    clearTimeout(timeout); //cancella timer precednete preima che scade
+    timeout = setTimeout(later, wait); //fa ripartire timer -> se utente non preme piu nulla viene eseguita la funzione
   };
 }
 
-// Gestione toggle password
+//TOGGLE MOSTRA/NASCONDI PASSWORD
 function initPasswordToggles() {
   const passwordToggles = document.querySelectorAll(".password-toggle");
 
+  //cilca su ogni pulsante per aggiungere listener
   passwordToggles.forEach((toggle) => {
     toggle.addEventListener("click", function () {
       const targetId = this.getAttribute("data-target");
       const input = document.getElementById(targetId);
       const icon = this.querySelector(".eye-icon");
 
+      //cambia immagine in base allo stato di visibilita della password
       if (input.type === "password") {
-        input.type = "text";
+        input.type = "text"; //permette di vedere la pw
         icon.src = "assets/img/pw_visibile.png";
       } else {
         input.type = "password";
@@ -297,41 +338,49 @@ function initPasswordToggles() {
   });
 }
 
-// Carica script dinamicamente
+// CARICAMENTO DINAMICO JS (carica controller pagine solo al bisogno)
 function loadScript(src) {
   return new Promise((resolve, reject) => {
     console.log(`📜 Caricamento script: ${src}`);
 
     // Controlla se lo script è già stato caricato
     const existingScript = document.querySelector(`script[src="${src}"]`);
+    // se esiste gia script -> esegue la promessa (senza ricarcarlo)
     if (existingScript) {
       console.log(`✅ Script già caricato: ${src}`);
       resolve();
       return;
     }
 
+    //crea elemento
     const script = document.createElement("script");
     script.src = src;
+
+    //quando browser dfinisce di scaricare e eseguire dile -> esegue la promessa
     script.onload = () => {
       console.log(`✅ Script caricato con successo: ${src}`);
       resolve();
     };
+    //se errore -> promessa viene rifiutata
     script.onerror = (error) => {
       console.error(`❌ Errore caricamento script: ${src}`, error);
       reject(error);
     };
+
+    //inserisce nella head della pagina lo script
     document.head.appendChild(script);
   });
 }
 
-// Sanitizza HTML per prevenire XSS
+// Sanitizza HTML per prevenire XSS (tentativi di codice malevolo )
 function sanitizeHTML(str) {
-  const temp = document.createElement("div");
-  temp.textContent = str;
-  return temp.innerHTML;
+  const temp = document.createElement("div"); //crea elemento in memoria
+  temp.textContent = str; //browser tratta cio che si scrive dentro a input come testo puro non codice
+  return temp.innerHTML; //restituosce versione codificata del testo -> tetso visualizzato correttamene ma non lo esegue come codice
 }
 
-// Esponi funzioni globalmente
+// Esponi funzioni/variabili globalmente
 window.showToast = showToast;
 window.showMessage = showMessage;
 window.initPasswordToggles = initPasswordToggles;
+window.image_path = "assets/img/"; //definizione del percorso delle immagini

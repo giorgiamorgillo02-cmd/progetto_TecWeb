@@ -3,36 +3,39 @@
  * API Endpoint: /api/me.php
  * 
  * Gestisce il profilo dell'utente autenticato
- * - GET: Recupera i dati del profilo (sostituisce check_session.php)
- * - PATCH/POST: Aggiorna il profilo (sostituisce update_profile.php)
+ * - GET: Recupera i dati del profilo (sostituisce check_session.php perchè include controllo blocco)
+ * - PATCH/POST: Aggiorna il profilo 
  */
 
+// Gestione delle dipendenze, caricamento classi e funzioni di supporto (__DIR__ è una costante che rappresenta la directory del file corrente)
 require_once __DIR__ . '/../config/dbConnection.php';
 require_once __DIR__ . '/../classes/Utente.php';
 require_once __DIR__ . '/../support/response.php';
 require_once __DIR__ . '/../support/auth.php';
 
-// Avvia sessione e verifica autenticazione
+// Avvia sessione e verifica autenticazione, questa funzione viene recuperata dal file di supporto Auth.php
 Auth::start();
 
-$method = $_SERVER['REQUEST_METHOD'];
+$method = $_SERVER['REQUEST_METHOD'];//ottiene il metodo HTTP della richiesta (GET, POST, PATCH, ecc.)
 
+/* Gestione delle richieste in base al metodo HTTP, con gestione degli errori (try-catch) 
+* Switch per instradare la richiesta al gestore corretto in base al metodo HTTP.*/
 try {
     switch ($method) {
         case 'GET':
-            handleGet($conn);
+            handleGet($conn);//chiama la funzione handleGet per gestire le richieste GET
             break;
             
         case 'PATCH':
         case 'POST': // Supporto POST temporaneo per compatibilità client
-            handleUpdate($conn);
+            handleUpdate($conn);//chiama la funzione handleUpdate per gestire le richieste PATCH e POST
             break;
             
         default:
             Response::error("Metodo non supportato", 405);
     }
 } catch (PDOException $e) {
-    error_log("Database error in /api/me.php: " . $e->getMessage());
+    error_log("Database error in /api/me.php: " . $e->getMessage());//log dell'errore per il debug
     Response::error("Errore del database", 500);
 } catch (Exception $e) {
     error_log("Error in /api/me.php: " . $e->getMessage());
@@ -52,23 +55,16 @@ function handleGet($conn) {
     
     $userId = (int)$_SESSION['id_utente'];
     
-    // Recupera dati utente dal database
-    $stmt = $conn->prepare("
-        SELECT nome, cognome, mail, telefono, via, citta, provincia, cap, ruolo, blocked
-        FROM utenti
-        WHERE id = :id
-    ");
-    $stmt->bindValue(':id', $userId, PDO::PARAM_INT);
-    $stmt->execute();
+    // Carica utente utilizzando la classe OOP
+    $utente = new Utente($conn, $userId);
     
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$user) {
+    // Verifica che l'utente esista
+    if ($utente->getId() === null) {
         Response::json(["authenticated" => false], 200);
     }
     
     // Controllo blocco utente
-    if ((int)($user['blocked'] ?? 0) === 1) {
+    if ($utente->isBlocked()) {
         session_destroy();
         Response::json([
             "authenticated" => false,
@@ -77,20 +73,20 @@ function handleGet($conn) {
         ], 200);
     }
     
-    // Ritorna dati utente
+    // Ritorna dati utente utilizzando i metodi getter
     Response::json([
         "authenticated" => true,
-        "id_utente" => $userId,
-        "email" => $user['mail'],
-        "nome" => $user['nome'],
-        "cognome" => $user['cognome'],
-        "telefono" => $user['telefono'],
-        "via" => $user['via'],
-        "citta" => $user['citta'],
-        "provincia" => $user['provincia'],
-        "cap" => $user['cap'],
-        "ruolo" => (int)$user['ruolo'],
-        "is_admin" => ((int)$user['ruolo'] === 1)
+        "id_utente" => $utente->getId(),
+        "email" => $utente->getMail(),
+        "nome" => $utente->getNome(),
+        "cognome" => $utente->getCognome(),
+        "telefono" => $utente->getTelefono(),
+        "via" => $utente->getVia(),
+        "citta" => $utente->getCitta(),
+        "provincia" => $utente->getProvincia(),
+        "cap" => $utente->getCap(),
+        "ruolo" => $utente->getRuolo(),
+        "is_admin" => $utente->isAdmin()
     ], 200);
 }
 
@@ -99,60 +95,52 @@ function handleGet($conn) {
  * Aggiorna il profilo dell'utente loggato
  */
 function handleUpdate($conn) {
-    Auth::requireLogin();
+    Auth::requireLogin();//verifica che l'utente sia autenticato
     
-    $userId = Auth::userId();
+    $userId = Auth::userId();//ottiene l'ID dell'utente autenticato dalla sessione
     
-    // Leggi body JSON
+    // Leggi body JSON, ovvero i dati inviati nella richiesta
     $data = json_decode(file_get_contents('php://input'), true);
     if (!$data) {
         Response::error("Dati non validi", 400);
     }
     
-    // Carica utente
+    // Carica utente, verifica esistenza
     $utente = new Utente($conn, $userId);
     if ($utente->getId() === null) {
         Response::error("Utente non trovato", 404);
     }
     
     // Prepara dati aggiornamento (solo campi consentiti all'utente)
+    // Whitelist dei campi modificabili dall'utente stesso
+    $campiConsentiti = ['nome', 'cognome', 'mail', 'telefono', 'via', 'citta', 'provincia', 'cap'];
     $datiAggiornamento = [];
     
-    if (array_key_exists('nome', $data)) {
-        $datiAggiornamento['nome'] = trim((string)$data['nome']);
-    }
-    if (array_key_exists('cognome', $data)) {
-        $datiAggiornamento['cognome'] = trim((string)$data['cognome']);
-    }
-    if (array_key_exists('mail', $data)) {
-        $datiAggiornamento['mail'] = trim((string)$data['mail']);
-    }
-    if (array_key_exists('telefono', $data)) {
-        $datiAggiornamento['telefono'] = trim((string)$data['telefono']);
-    }
-    if (array_key_exists('via', $data)) {
-        $datiAggiornamento['via'] = trim((string)$data['via']);
-    }
-    if (array_key_exists('citta', $data)) {
-        $datiAggiornamento['citta'] = trim((string)$data['citta']);
-    }
-    if (array_key_exists('provincia', $data)) {
-        $datiAggiornamento['provincia'] = strtoupper(trim((string)$data['provincia']));
-    }
-    if (array_key_exists('cap', $data)) {
-        $datiAggiornamento['cap'] = trim((string)$data['cap']);
+    // Filtra e sanitizza solo i campi consentiti presenti nei dati. 
+    foreach ($campiConsentiti as $campo) {
+        if (array_key_exists($campo, $data)) {
+            $valore = trim((string)$data[$campo]);
+            
+            // Normalizzazione specifica per provincia (deve essere maiuscola)
+            if ($campo === 'provincia') {
+                $valore = strtoupper($valore);
+            }
+            
+            $datiAggiornamento[$campo] = $valore;
+        }
     }
     
-    // Gestione password
+    // Gestione password separata (campo sensibile)
     if (!empty($data['password'] ?? '')) {
         $datiAggiornamento['password'] = (string)$data['password'];
     }
     
+    // Verifica che ci siano dati da aggiornare
     if (empty($datiAggiornamento)) {
         Response::error("Nessun dato da aggiornare", 400);
     }
     
-    // Validazioni
+    // Validazioni di base a livello API (quelle complesse sono nella classe Utente)
     if (isset($datiAggiornamento['nome']) && $datiAggiornamento['nome'] === '') {
         Response::error("Nome obbligatorio", 400);
     }

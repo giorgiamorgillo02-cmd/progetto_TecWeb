@@ -1,5 +1,6 @@
-// app.js - Entry point dell'applicazione SPA
-// Inizializza l'applicazione quando il DOM è caricato
+//APP.JS -> ENTRY POINT DELL'APPLICAZIONE SPA
+
+// INIZIALIZZA L'APPLICAZIONE (dopo caricamento del DOM)
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("🚀 Inizializzazione SPA Artly...");
 
@@ -63,7 +64,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   console.log("✅ SPA inizializzata con successo");
 });
 
-// Registra tutte le rotte dell'applicazione
+//GESTIONE DELLE ROUTE
 function registerRoutes() {
   // Home page
   router.addRoute("/home", async () => {
@@ -87,14 +88,14 @@ function registerRoutes() {
 
   // Checkout
   router.addRoute("/checkout", async () => {
-    // Verifica che l'utente sia autenticato
+    //se utente non autenticato -> messaggio + reinderizza
     if (!store.isAuthenticated()) {
       showToast("Effettua il login per procedere");
       router.navigate("/login?redirect=/checkout");
       return;
     }
 
-    // Verifica che il carrello non sia vuoto
+    //se carrello vuoto -> messaggo + reiderizza
     if (store.getCart().length === 0) {
       showToast("Il carrello è vuoto");
       router.navigate("/carrello");
@@ -116,7 +117,7 @@ function registerRoutes() {
 
   // Registrazione
   router.addRoute("/registrazione", async () => {
-    // Se già autenticato, reindirizza alla home
+    // Se utente già autenticato -> reindirizza alla home
     if (store.isAuthenticated()) {
       router.navigate("/home");
       return;
@@ -126,10 +127,10 @@ function registerRoutes() {
 
   // Profilo
   router.addRoute("/profilo", async () => {
-    // Verifica autenticazione
+    //se non autenticato -> messaggio + reinderizza a login
     if (!store.isAuthenticated()) {
       showToast("Effettua il login per accedere al profilo");
-      router.navigate("/login?redirect=/profilo");
+      router.navigate("/login?redirect=/profilo"); //reinderizza a login ma destinazione finale è profilo
       return;
     }
     await loadView("profilo");
@@ -137,10 +138,10 @@ function registerRoutes() {
 
   // Preferiti
   router.addRoute("/preferiti", async () => {
-    // Verifica autenticazione
+    //se non autenticato -> messaggio + reidnerizza a login
     if (!store.isAuthenticated()) {
       showToast("Effettua il login per vedere i preferiti");
-      router.navigate("/login?redirect=/preferiti");
+      router.navigate("/login?redirect=/preferiti"); //reinderizza a login ma destinazione finale è preferiti
       return;
     }
     await loadView("preferiti");
@@ -148,14 +149,14 @@ function registerRoutes() {
 
   // Admin
   router.addRoute("/admin", async () => {
-    // Verifica autenticazione
+    // se non autenticato -> messaggio + reinderizza a login (poi a admin)
     if (!store.isAuthenticated()) {
       showToast("Effettua il login per accedere");
       router.navigate("/login?redirect=/admin");
       return;
     }
 
-    // Verifica se l'utente è admin
+    //se utnete non admin -> messaggio + reinderizza a home
     if (!store.isAdmin()) {
       showToast("Accesso negato: solo gli amministratori possono accedere");
       router.navigate("/home");
@@ -181,32 +182,36 @@ function registerRoutes() {
   });
 }
 
-// Carica una view dinamicamente
+//CARICA VIEW DINAMICAMENTE (gestore cambio pagina)
 async function loadView(viewName, params = {}) {
-  const appContainer = document.getElementById("app");
+  //async -> aspetta il caricamento di file esterni
+  const appContainer = document.getElementById("app"); //dove agisce nel DOM
 
+  //se non trova container -> messaggio errore + esce
   if (!appContainer) {
     console.error("Container #app non trovato");
     return;
   }
 
   try {
-    // Mostra loader
+    // Mostra loader (feedback utente mentre scarica i file)
     appContainer.innerHTML = '<div class="page-loader">Caricamento...</div>';
 
-    // Carica il template HTML della view
+    // Carica il template HTML della view (scarica html specifico)
     const response = await fetch(`views/${viewName}.html`);
 
+    //se non trova file -> messaggio errore
     if (!response.ok) {
       throw new Error(`View non trovata: ${viewName}`);
     }
 
-    const html = await response.text();
+    const html = await response.text(); //trasforma risposta del server in codice hrml
 
+    //debug
     console.log("📄 HTML caricato, lunghezza:", html.length, "caratteri");
     console.log("🔍 Contiene orderItems?", html.includes("orderItems"));
 
-    // Costruisci il contenuto completo PRIMA di inserirlo
+    //assemblaggio della pagina (header, contenuto della pagina, footer)
     const fullHTML =
       '<div id="header-container"></div>' +
       '<main id="main-content">' +
@@ -217,15 +222,15 @@ async function loadView(viewName, params = {}) {
       "</div>" +
       '<div class="toast" id="toast"></div>';
 
-    // Inserisci tutto in una volta
+    // Inserisce blocco nel DOM
     appContainer.innerHTML = fullHTML;
 
-    // Render header
+    //inizializza componenti globali
     const headerContainer = document.getElementById("header-container");
-    headerContainer.innerHTML = headerComponent.render();
-    headerComponent.attachEvents();
+    headerContainer.innerHTML = headerComponent.render(); //disegna header
+    headerComponent.attachEvents(); //attiva listener (come menu a tendina)
 
-    // IMPORTANTE: Aspetta 2 frame del browser per assicurarsi che il DOM sia renderizzato
+    //forza il browser ad aspettare che css e html siano stati visualizzati prima di lanciare il controller
     await new Promise((resolve) =>
       requestAnimationFrame(() => requestAnimationFrame(resolve)),
     );
@@ -233,6 +238,7 @@ async function loadView(viewName, params = {}) {
     // Carica e inizializza il controller della view
     await initViewController(viewName, params);
   } catch (error) {
+    //se errore -> mostra pagina di errore
     console.error("Errore caricamento view:", error);
     appContainer.innerHTML = `
       <div class="error-page">
@@ -244,9 +250,9 @@ async function loadView(viewName, params = {}) {
   }
 }
 
-// Inizializza il controller della view
+//INIZIALIZZA CONTROLLER DELLA VIEW (associa html e js)
 async function initViewController(viewName, params) {
-  // Mapping tra view e controller
+  // Mapping tra view e controller -> associa stringa (nome della view) a funzione (controller js)
   const controllers = {
     home: initHomeView,
     prodotti: initProdottiView,
@@ -261,30 +267,34 @@ async function initViewController(viewName, params) {
     "order-success": initOrderSuccessView,
   };
 
+  //recupera funzione corrispondente al nome della pagina caricata
   const controller = controllers[viewName];
 
+  //se controller esiste -> esegue passando paramentri
   if (controller) {
     try {
       await controller(params);
     } catch (error) {
+      //se errore -> messaggio errore
       console.error(`Errore inizializzazione controller ${viewName}:`, error);
     }
   }
 }
 
-// ==================== VIEW CONTROLLERS ====================
+// -----------VIEW CONTROLLERS -----------
 
-// Controller per la home
+//CONTROLLER HOME
 function initHomeView() {
   // Newsletter form
   const newsletterForm = document.getElementById("newsletterForm");
   const newsletterEmail = document.getElementById("newsletterEmail");
 
+  //gestione iscirzione newsletter
   if (newsletterForm && newsletterEmail) {
+    //se trova i campi inseriti -> al click del bottone messaggio successo + svuota il campo
     newsletterForm.addEventListener("submit", (e) => {
-      e.preventDefault();
+      e.preventDefault(); // blocca ricaricamento della pagina
 
-      // Mostra toast di successo e svuota il campo
       if (typeof window.showToast === "function") {
         window.showToast("🎉 Complimenti! Ora sei iscritto alla newsletter");
       }
@@ -293,18 +303,11 @@ function initHomeView() {
     });
   }
 
-  // Upload button (simulazione)
-  const uploadBtn = document.getElementById("uploadBtn");
-  if (uploadBtn) {
-    uploadBtn.addEventListener("click", () => {
-      showToast("Funzione upload in arrivo 😉");
-    });
-  }
-
   // Search bar nella home
   const searchInput = document.getElementById("searchInput");
   const searchSubmit = document.getElementById("searchSubmit");
 
+  //se inserisce input nella barra di ricerca -> messaaggio feedback
   if (searchSubmit && searchInput) {
     searchSubmit.addEventListener("click", () => {
       const q = searchInput.value.trim();
@@ -312,17 +315,18 @@ function initHomeView() {
         showToast("Inserisci una parola chiave per cercare 🔎");
         return;
       }
-      // Naviga alla pagina prodotti
+      //reinderizza al catalogo prodotti
       router.navigate("/prodotti");
     });
   }
 }
 
-// Controller per la pagina prodotti
+//CONTROLLER PAGINA PRODOTTI
 async function initProdottiView() {
   console.log("🎯 initProdottiView chiamato");
 
   // Carica lo script se non è già caricato
+  //se non trova lo script in memotia -> lo carica e mstra messaggi nel debug
   if (!window.initProdottiPage) {
     console.log(
       "📥 window.initProdottiPage non trovato, caricamento script...",
@@ -333,7 +337,9 @@ async function initProdottiView() {
       "📜 Script caricato, window.initProdottiPage =",
       typeof window.initProdottiPage,
     );
-  } else {
+  }
+  //se script gia in memoria -> messaggio debug positvo
+  else {
     console.log("✅ window.initProdottiPage già disponibile");
   }
 
@@ -341,47 +347,56 @@ async function initProdottiView() {
   await new Promise((resolve) => setTimeout(resolve, 10));
 
   // Esegui l'inizializzazione
+  //se trova la pagina -> chiama il controller
   if (window.initProdottiPage) {
     console.log("🚀 Chiamata a window.initProdottiPage()");
     window.initProdottiPage();
-  } else {
+  }
+  //se errore -> messaggio nel debug
+  else {
     console.error("❌ window.initProdottiPage non è una funzione!");
   }
 }
 
-// Controller per il dettaglio prodotto
+//CONTROLLER DETTAGLIO-PRODOTTO
 async function initDettaglioProdottoView(params) {
-  const productId = params.id;
+  const productId = params.id; //recupera id prodotto dall'url
 
+  //se manca id -> messaggio + reinderizza al catalogo
   if (!productId) {
     showToast("Prodotto non trovato");
     router.navigate("/prodotti");
     return;
   }
 
+  //se manca script memoria -> carica script dettaglio-prodotto
   if (!window.initDettaglioProdottoPage) {
     await loadScript("assets/js/pages/dettaglio-prodotto.js");
   }
 
+  //se lo script esiste in memoria-> passa id del prodotto per caricare dati del prodotto nella pagina
   if (window.initDettaglioProdottoPage) {
     window.initDettaglioProdottoPage(productId);
   }
 }
 
-// Controller per il carrello
+//CONTROLLER CARRELLO
 async function initCarrelloView() {
+  //se manca script memoria -> carica script carrello
   if (!window.initCarrelloPage) {
     await loadScript("assets/js/pages/carrello.js");
   }
 
+  //delay del browser per garantire che il dom sia pronto
   await new Promise((resolve) => setTimeout(resolve, 10));
 
+  //se script gia in memoria -> carica pagina carrello
   if (window.initCarrelloPage) {
     window.initCarrelloPage();
   }
 }
 
-// Controller per il checkout
+//CONTROLLER CHECKOUT
 async function initCheckoutView() {
   console.log("🔧 initCheckoutView chiamato");
 
@@ -390,7 +405,7 @@ async function initCheckoutView() {
     await loadScript("assets/js/pages/checkout.js");
   }
 
-  // Aspetta che il DOM sia completamente renderizzato
+  // Aspetta che il DOM sia completamente renderizzato (delay maggioore perche form gia precompilati)
   await new Promise((resolve) => setTimeout(resolve, 100));
 
   if (window.initCheckoutPage) {
@@ -401,13 +416,14 @@ async function initCheckoutView() {
   }
 }
 
-// Controller per il login
+//CONTROLLER LOGIN
 function initLoginView(params) {
-  initPasswordToggles();
-  setupForgotPasswordModal();
+  initPasswordToggles(); //attiva occhio epr mostrare/nascondere pw
+  setupForgotPasswordModal(); //prepara modale di recupero password
 
+  //inizializza dati passati dal form
   const loginForm = document.getElementById("loginForm");
-  if (!loginForm) return;
+  if (!loginForm) return; //controllo sicurezza: se non trova dati dal form -> esce
 
   const loginBtn = document.querySelector("#loginForm .auth-btn");
   const loginEmail = document.getElementById("loginEmail");
@@ -417,6 +433,7 @@ function initLoginView(params) {
 
   // Validazione in tempo reale per email
   loginEmail.addEventListener("blur", () => {
+    //evento scatta quando utente esce dal campo
     const error = validateEmail(loginEmail.value);
     showFieldError(loginEmail, emailError, error);
   });
@@ -430,30 +447,34 @@ function initLoginView(params) {
 
   // Validazione in tempo reale per password
   loginPassword.addEventListener("blur", () => {
-    const error = validateRequired(loginPassword.value, "La password");
+    const error = validatePassword(loginPassword.value);
     showFieldError(loginPassword, passwordError, error);
   });
 
   loginPassword.addEventListener("input", () => {
     if (loginPassword.classList.contains("input-error")) {
-      const error = validateRequired(loginPassword.value, "La password");
+      const error = validatePassword(loginPassword.value);
       showFieldError(loginPassword, passwordError, error);
     }
   });
 
+  //gestione invio del form
   loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+    e.preventDefault(); //impedisce ricaricamento della pagina
 
+    //salva variabili pulite
     const email = loginEmail.value.trim();
     const password = loginPassword.value.trim();
 
-    // Validazione completa
+    // Validazione attraverso funzioni
     const emailErr = validateEmail(email);
-    const passwordErr = validateRequired(password, "La password");
+    const passwordErr = validatePassword(password);
 
+    //per mostrare errori
     showFieldError(loginEmail, emailError, emailErr);
     showFieldError(loginPassword, passwordError, passwordErr);
 
+    // se uno dei due campi manca -> messaggio errore
     if (emailErr || passwordErr) {
       showMessage("Compila correttamente tutti i campi", "error");
       return;
@@ -464,6 +485,7 @@ function initLoginView(params) {
 
     try {
       const response = await fetch("api/auth/login.php", {
+        //chiamata api per autenticazione
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
@@ -475,20 +497,20 @@ function initLoginView(params) {
 
       const data = await response.json();
 
+      //se successo -> messaggio conferma + aggiorna store con i dati utente
       if (data.success) {
         showMessage(data.message, "success");
 
-        // Aggiorna lo store con i dati utente
         await checkUserAuth();
 
         setTimeout(() => {
           // Reindirizza alla pagina originale se presente il parametro redirect
           let redirectTo = params.redirect || "/home";
 
-          // Se il redirect contiene caratteri codificati (come %3F per ?), decodificali
+          //pulisce url per redirect corretto
           redirectTo = decodeURIComponent(redirectTo);
 
-          // Verifica se l'utente è admin e sta cercando di accedere all'admin
+          //se il reinderizzamento è alla pagina admin e non è admin -> nega accesso + porta a home
           if (redirectTo === "/admin" && !store.isAdmin()) {
             showToast("Accesso negato: non hai i permessi di amministratore");
             redirectTo = "/home";
@@ -500,19 +522,22 @@ function initLoginView(params) {
         showMessage(data.message, "error");
       }
     } catch (error) {
+      //se errore -> messaggio
       console.error("Errore:", error);
       showMessage("Errore connessione. Riprova.", "error");
     } finally {
+      //in ogni caso -> ripristina bottone (permette a utente di interagire di nuovo con il form dopo che chiamata api è terminata)
       loginBtn.textContent = "Accedi";
       loginBtn.disabled = false;
     }
   });
 }
 
-// Controller per la registrazione
+//CONTROLLER REGISTRAZIONE
 function initRegistrazioneView() {
-  initPasswordToggles();
+  initPasswordToggles(); //attiva funzione per mostrare/nascondere pw
 
+  //selezione il form -> se non esiste -> esce
   const registerForm = document.getElementById("registerForm");
   if (!registerForm) return;
 
@@ -544,15 +569,17 @@ function initRegistrazioneView() {
     "registerPasswordConfirmError",
   );
 
-  let emailCheckTimeout;
+  let emailCheckTimeout; //per controllo se mail
 
   // Validazione in tempo reale - Nome
   firstName.addEventListener("blur", () => {
+    //quando utente esce da input
     const error = validateRequired(firstName.value, "Il nome");
     showFieldError(firstName, firstNameError, error);
   });
 
   firstName.addEventListener("input", () => {
+    // a ogni tasto
     if (firstName.classList.contains("input-error")) {
       const error = validateRequired(firstName.value, "Il nome");
       showFieldError(firstName, firstNameError, error);
@@ -579,9 +606,10 @@ function initRegistrazioneView() {
 
     showFieldError(registerEmail, emailError, error);
 
+    //Se il formato email è valido -> interroga il database per vedere se esiste gia
     if (!error) {
-      // Se il formato è valido, verifica se l'email esiste già
       const exists = await checkEmailExists(email);
+      //se esiste-> mostra errore
       if (exists) {
         showFieldError(
           registerEmail,
@@ -592,8 +620,9 @@ function initRegistrazioneView() {
     }
   });
 
+  //controlla esistenza dopo tempo di inattivita
   registerEmail.addEventListener("input", () => {
-    clearTimeout(emailCheckTimeout);
+    clearTimeout(emailCheckTimeout); //camcella timer se utente digita ancora
 
     if (registerEmail.classList.contains("input-error")) {
       emailCheckTimeout = setTimeout(async () => {
@@ -603,8 +632,9 @@ function initRegistrazioneView() {
         showFieldError(registerEmail, emailError, error);
 
         if (!error) {
-          // Se il formato è valido, verifica se l'email esiste già
+          // Se il formato è valido -> verifica se l'email esiste già
           const exists = await checkEmailExists(email);
+          //se esiste mail -> messaggio errore
           if (exists) {
             showFieldError(
               registerEmail,
@@ -727,9 +757,11 @@ function initRegistrazioneView() {
     }
   });
 
+  //gestione invio del form
   registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    //inizializza variabili con valori finali da registrare
     const nome = firstName.value.trim();
     const cognome = lastName.value.trim();
     const mail = registerEmail.value.trim();
@@ -744,7 +776,7 @@ function initRegistrazioneView() {
 
     const registerBtn = document.querySelector("#registerForm .auth-btn");
 
-    // Validazione completa
+    // Validazione completa (controllo aggiuntico per sicureza)
     const nomeErr = validateRequired(nome, "Il nome");
     const cognomeErr = validateRequired(cognome, "Il cognome");
     const emailErr = validateEmail(mail);
@@ -759,6 +791,7 @@ function initRegistrazioneView() {
       passwordConfirm,
     );
 
+    //mostra graficamente tutti errori trovati
     showFieldError(firstName, firstNameError, nomeErr);
     showFieldError(lastName, lastNameError, cognomeErr);
     showFieldError(registerEmail, emailError, emailErr);
@@ -774,6 +807,7 @@ function initRegistrazioneView() {
       passwordConfirmErr,
     );
 
+    //se anche uno dei campi ha errore -> mostra messaggio + esce
     if (
       nomeErr ||
       cognomeErr ||
@@ -790,6 +824,7 @@ function initRegistrazioneView() {
       return;
     }
 
+    //controllo sulla privacy
     if (!terms) {
       showMessage("Accetta i termini e condizioni", "error");
       return;
@@ -807,15 +842,18 @@ function initRegistrazioneView() {
       return;
     }
 
+    //stato di caricamento del pulsante
     registerBtn.textContent = "Registrazione...";
     registerBtn.disabled = true;
 
     try {
       const response = await fetch("api/auth/registrazione.php", {
-        method: "POST",
+        //invia dati al backend
+        method: "POST", //dati sensibili
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
         body: JSON.stringify({
+          //oggetto in stringa
           nome: nome,
           cognome: cognome,
           mail: mail,
@@ -829,11 +867,12 @@ function initRegistrazioneView() {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json(); //legge risposta json
+      //mostra messaggio se ha avuto successo o errore
       showMessage(data.message, data.success ? "success" : "error");
 
+      //se successo -> aggiorna stato utente + reinderizza a home
       if (data.success) {
-        // Aggiorna lo store con i dati utente
         await checkUserAuth();
 
         setTimeout(() => {
@@ -841,42 +880,48 @@ function initRegistrazioneView() {
         }, 1500);
       }
     } catch (error) {
+      //se errore -> messaggio errore
       console.error("Errore:", error);
       showMessage("Errore connessione", "error");
     } finally {
+      //in ogni caso ripristina il pulsante
       registerBtn.textContent = "Crea account";
       registerBtn.disabled = false;
     }
   });
 }
 
-// Controller per il profilo
+//CONTROLLER PROFILO
 async function initProfiloView() {
+  //se non ancora in memoria -> carica script
   if (!window.initProfiloPage) {
     await loadScript("assets/js/pages/profilo.js");
   }
 
   await new Promise((resolve) => setTimeout(resolve, 10));
 
+  //se gia in memoria -> carica pagina
   if (window.initProfiloPage) {
     window.initProfiloPage();
   }
 }
 
-// Controller per i preferiti
+//CONTROLLER PREFERITI
 async function initPreferitiView() {
+  //se non ancora in memoria -> carica script
   if (!window.initPreferitiPage) {
     await loadScript("assets/js/pages/preferiti.js");
   }
 
   await new Promise((resolve) => setTimeout(resolve, 10));
 
+  //se gia in memoria -> carica pagina
   if (window.initPreferitiPage) {
     window.initPreferitiPage();
   }
 }
 
-// Controller per l'admin
+//CONTROLLER ADMIN
 async function initAdminView() {
   if (!window.initAdminPage) {
     await loadScript("assets/js/pages/admin.js");
@@ -884,11 +929,13 @@ async function initAdminView() {
 
   // Aspetta che gli elementi DOM siano presenti
   let attempts = 0;
+  //utilizza while -> pagina pesante con tabelle dinamiche
   while (!document.getElementById("prodotti-list") && attempts < 20) {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    attempts++;
+    await new Promise((resolve) => setTimeout(resolve, 50)); //aspetta 50 millisecondi prima di riprovare
+    attempts++; //incrementa numero di prove effettuate
   }
 
+  //se dopo 20 tentativi non trova elemento -> esce
   if (!document.getElementById("prodotti-list")) {
     console.error(
       "❌ ERRORE: Elementi admin non trovati nel DOM dopo 1 secondo!",
@@ -897,17 +944,18 @@ async function initAdminView() {
       "📋 Contenuto #main-content:",
       document.getElementById("main-content")?.innerHTML.substring(0, 200),
     );
-    return;
+    return; //evita crash
   }
 
   console.log("✅ Elementi DOM trovati, inizializzo admin...");
 
+  //se script gia presente in memoria -> carica la pagina
   if (window.initAdminPage) {
     window.initAdminPage();
   }
 }
 
-// Controller per order success
+//CONTROLLER ORDINE
 function initOrderSuccessView() {
   // Mostra messaggio di successo
   setTimeout(() => {
@@ -915,34 +963,39 @@ function initOrderSuccessView() {
   }, 100);
 }
 
-// Migra il carrello e pulisce vecchi storage
+//MIGRA CARRELLO + PULISCE VECCHI STORAGE
 function migrateCartStorage() {
   try {
-    // Rimuovi eventuali dati del carrello da sessionStorage (vecchia implementazione)
+    // Rimuovi eventuali dati del carrello da sessionStorage
     const sessionCart = sessionStorage.getItem("artly_cart");
+    //se ci sono residui di dati -> rimuove quei dati
     if (sessionCart) {
       console.log("🔄 Rimozione carrello da sessionStorage...");
-      sessionStorage.removeItem("artly_cart");
+      sessionStorage.removeItem("artly_cart"); // Elimina definitivamente la chiave dal sessionStorage per evitare conflitti
       console.log("✅ Carrello rimosso da sessionStorage");
     }
 
     // Il carrello ora è sempre in localStorage
     console.log("✅ Storage configurato correttamente");
   } catch (error) {
+    //se errore -> messaggio errore
     console.error("❌ Errore durante la pulizia dello storage:", error);
   }
 }
 
-// Setup modal recupero password
+//MODALE PER RESET PASSWORD
 function setupForgotPasswordModal() {
+  //seleziona elementi nel DOM
   const forgotLink = document.getElementById("forgotPasswordLink");
   const modal = document.getElementById("forgotPasswordModal");
   const closeBtn = document.getElementById("closeForgotPasswordModal");
   const cancelBtn = document.getElementById("cancelResetBtn");
   const form = document.getElementById("forgotPasswordForm");
 
+  //se elementi di base non esistono -> esce
   if (!forgotLink || !modal) return;
 
+  //riferimenti a campi di input per errori
   const resetEmail = document.getElementById("resetEmail");
   const resetNewPassword = document.getElementById("resetNewPassword");
   const resetConfirmPassword = document.getElementById("resetConfirmPassword");
@@ -955,8 +1008,11 @@ function setupForgotPasswordModal() {
   );
 
   // Funzioni di validazione
+  //se mail valida -> stringa vuota. altrimenti stringa contenente errore
   function validateEmail(email) {
+    //se mail non è stata inserita
     if (!email) return "L'email è obbligatoria";
+    //se formato non valido
     if (!email.includes("@") || !email.includes(".")) {
       return "Inserisci un'email valida";
     }
@@ -979,13 +1035,17 @@ function setupForgotPasswordModal() {
     return "";
   }
 
+  //gestisce aspetto dell'input e messaggio di errore
   function showFieldError(input, errorSpan, message) {
+    //se messaggio esiste ->  applica stile errore e mostra messaggio
     if (message) {
       input.classList.add("input-error");
       input.classList.remove("input-success");
       errorSpan.textContent = message;
       errorSpan.style.display = "block";
-    } else {
+    }
+    //se messaggio non esiste -> applica stile successo e mostra messaggio
+    else {
       input.classList.remove("input-error");
       input.classList.add("input-success");
       errorSpan.textContent = "";
@@ -1004,7 +1064,7 @@ function setupForgotPasswordModal() {
       const error = validatePassword(resetNewPassword.value);
       showFieldError(resetNewPassword, resetNewPasswordError, error);
     }
-    // Ricontrolla la conferma se già validata
+    //se cambia password principale -> rincontrollas se la conferma è ancora uguale
     if (
       resetConfirmPassword.value &&
       resetConfirmPassword.classList.contains("input-error")
@@ -1035,7 +1095,7 @@ function setupForgotPasswordModal() {
     }
   });
 
-  // Apri modal e precompila email
+  // Apri modale e precompila email
   forgotLink.addEventListener("click", (e) => {
     e.preventDefault();
 
@@ -1045,10 +1105,10 @@ function setupForgotPasswordModal() {
       resetEmail.value = loginEmail.value.trim();
     }
 
-    modal.style.display = "flex";
+    modal.style.display = "flex"; // Mostra la modale
   });
 
-  // Chiudi modal
+  // Chiudi modale
   const closeModal = () => {
     modal.style.display = "none";
     form.reset();
@@ -1070,14 +1130,16 @@ function setupForgotPasswordModal() {
   closeBtn.addEventListener("click", closeModal);
   cancelBtn.addEventListener("click", closeModal);
 
+  //chiude modale se utente clicca fuori dalla modale
   modal.addEventListener("click", (e) => {
     if (e.target === modal) closeModal();
   });
 
-  // Submit form
+  // gestione invio del form
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    // Pulizia messaggi di stato (successo/errore globale)
     const errorMsg = document.getElementById("resetErrorMessage");
     const successMsg = document.getElementById("resetSuccessMessage");
     errorMsg.style.display = "none";
@@ -1106,6 +1168,7 @@ function setupForgotPasswordModal() {
 
     try {
       const response = await fetch("api/auth/reset-password.php", {
+        //chiamata all'api per reset pw
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1118,6 +1181,7 @@ function setupForgotPasswordModal() {
 
       const data = await response.json();
 
+      //se successo -> messaggio di conferma e chiude automaticamente modale
       if (data.success) {
         successMsg.textContent =
           "Password modificata con successo! Puoi effettuare il login.";
@@ -1127,12 +1191,15 @@ function setupForgotPasswordModal() {
         setTimeout(() => {
           closeModal();
         }, 2000);
-      } else {
+      }
+      //se errore -> messaggio errore
+      else {
         errorMsg.textContent =
           data.message || "Errore durante il reset della password";
         errorMsg.style.display = "block";
       }
     } catch (error) {
+      // se errore -> messaggio errore
       console.error("Errore:", error);
       errorMsg.textContent = "Errore di connessione al server";
       errorMsg.style.display = "block";

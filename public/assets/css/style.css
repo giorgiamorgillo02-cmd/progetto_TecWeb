@@ -1,31 +1,60 @@
+/* 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     1. CONFIGURAZIONE E VARIABILI GLOBALI                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/
+
+/* ===== VARIABILI CSS (CUSTOM PROPERTIES) ===== */
+/* Design tokens riutilizzabili per mantenere consistenza visiva
+   Tutti i colori, spaziature e bordi sono centralizzati qui
+   per facilitare modifiche globali e manutenzione del tema */
 :root {
   --bg: #050816;
-  --bg-elevated: #0b1020;
+  --bg-elevated: #0b1020; /* per card e modali */
   --bg-soft: #12182a;
   --accent: #ff7a3c;
-  --accent-soft: rgba(255, 122, 60, 0.12);
+  --accent-soft: rgba(255, 122, 60, 0.12); /* per sfondi e hover più delicati */
   --border-subtle: rgba(255, 255, 255, 0.08);
   --text: #f5f5f7;
   --text-soft: #a3a7c5;
   --radius-lg: 24px;
   --radius-md: 16px;
-  --radius-pill: 999px;
+  --radius-pill: 999px; /* pill per bordi arrotondati */
   --shadow-soft: 0 18px 60px rgba(0, 0, 0, 0.6);
   --gap: 1.5rem;
 }
 
+/* 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          2. RESET E STILI BASE                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/
+
+/* ===== RESET UNIVERSALE ===== */
+/* Applica box-sizing: border-box a tutti gli elementi
+   Questo fa sì che padding e border siano INCLUSI nella larghezza/altezza dichiarata,
+   invece di aggiungersi (comportamento di default). Esempio:
+   - div con width: 100px + padding: 10px = ancora 100px totali (non 120px)
+   ::before e ::after sono pseudo-elementi che permettono di inserire contenuto
+   generato via CSS prima/dopo un elemento, usati per effetti decorativi */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
+/* Logo immagine con altezza fissa e larghezza automatica
+   per mantenere proporzioni originali */
 .logo-img {
-  height: 55px; /* puoi alzarlo o abbassarlo */
-  width: auto;
-  display: block;
+  height: 55px;
+  width: auto; /* Mantiene aspect ratio */
+  display: block; /* Rimuove spazio sotto immagine (inline di default) */
 }
 
+/* ===== STILI BASE HTML/BODY ===== */
+/* Reset margin/padding e definizione font-family con fallback stack
+   system-ui usa il font nativo del sistema operativo (SF Pro su macOS, Segoe su Windows)
+   per prestazioni migliori e look nativo */
 html,
 body {
   margin: 0;
@@ -37,21 +66,33 @@ body {
     "SF Pro Text",
     Roboto,
     sans-serif;
+  /* Gradiente radiale da centro in alto verso il basso
+     Crea effetto spotlight con blu più chiaro al centro */
   background: radial-gradient(circle at top, #171f3e, #050816 45%);
   color: var(--text);
 }
 
-/* Layout base */
+/* 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      3. LAYOUT GLOBALE E CONTAINER                           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/
 
+/* ===== LAYOUT BASE E CONTAINER ===== */
+/* Container con larghezza massima responsiva
+   min() sceglie il valore più piccolo tra 1120px e 100% - 2.5rem
+   Garantisce padding laterale su schermi piccoli e max-width su grandi */
 .container {
   width: min(1120px, 100% - 2.5rem);
-  margin-inline: auto;
+  margin-inline: auto; /* Centra orizzontalmente (shorthand per margin-left e margin-right) */
 }
 
+/* Sezione standard con padding verticale */
 .section {
   padding: 4rem 0;
 }
 
+/* Variante sezione con background gradiente diverso per alternanza visiva */
 .section-alt {
   background: radial-gradient(circle at top, #11162b, #050816 60%);
 }
@@ -70,13 +111,23 @@ body {
   color: var(--text-soft);
 }
 
-/* Header */
+/* 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      4. HEADER E NAVIGAZIONE PRINCIPALE                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/
 
+/* ===== HEADER STICKY ===== */
+/* Header che rimane fisso in cima durante lo scroll
+   - position: sticky + top: 0 = si comporta come relative finché non raggiunge il top, poi diventa fixed
+   - z-index: 20 = garantisce che stia sopra tutti gli altri elementi (default è 0)
+   - backdrop-filter: blur() = sfoca lo sfondo dietro l'header per effetto vetro smerigliato (glassmorphism)
+   - background con gradiente e trasparenza per vedere il blur effect */
 .header {
   position: sticky;
   top: 0;
-  z-index: 20; /*mette il menu sopra gli altri elementi*/
-  backdrop-filter: blur(18px);
+  z-index: 20;
+  backdrop-filter: blur(18px); /* Effetto glass/frosted */
   background: linear-gradient(
     to bottom,
     rgba(5, 8, 22, 0.92),
@@ -86,6 +137,8 @@ body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+/* Layout interno header con flexbox
+   justify-content: space-between distribuisce logo, nav e actions ai lati */
 .header-inner {
   display: flex;
   align-items: center;
@@ -94,16 +147,20 @@ body {
   padding: 0.8rem 0;
 }
 
-/* Logo */
-
+/* ===== LOGO ===== */
+/* Logo con icona e testo affiancati */
 .logo {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   font-weight: 600;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.03em; /* Spaziatura tra lettere per leggibilità */
 }
 
+/* Icona logo con gradiente conico animato
+   conic-gradient crea un gradiente circolare che ruota attorno al centro
+   from 140deg = punto di partenza della rotazione colori
+   Colori: arancione -> giallo -> ciano -> viola -> arancione (loop seamless) */
 .logo-mark {
   width: 34px;
   height: 34px;
@@ -120,20 +177,22 @@ body {
     #8f7aff,
     #ff7a3c
   );
-  box-shadow: 0 0 22px rgba(255, 122, 60, 0.7);
-  color: #050816;
+  box-shadow: 0 0 22px rgba(255, 122, 60, 0.7); /* Glow arancione */
+  color: #050816; /* Testo scuro su sfondo chiaro */
 }
 
 .logo-text {
   font-size: 1rem;
 }
 
-/* Navbar */
-
+/* ===== NAVBAR ===== */
+/* Navbar centrale che occupa spazio rimanente tra logo e actions */
 .nav {
-  flex: 1;
+  flex: 1; /* Prende tutto lo spazio disponibile */
 }
 
+/* Lista link orizzontale centrata
+   list-style: none rimuove i bullet point (pallini) */
 .nav-list {
   display: flex;
   justify-content: center;
@@ -143,6 +202,8 @@ body {
   margin: 0;
 }
 
+/* Stile link con position: relative per contenere il ::after assoluto
+   Il pseudo-elemento ::after sarà posizionato in modo assoluto RISPETTO a questo link */
 .nav-list a {
   text-decoration: none;
   color: var(--text-soft);
@@ -151,34 +212,51 @@ body {
   padding-bottom: 0.2rem;
 }
 
+/* ===== LINEA ANIMATA SOTTO LINK (TECNICA ::AFTER) ===== */
+/* Pseudo-elemento ::after crea un elemento "fantasma" dopo il contenuto del link
+   Viene usato per creare la linea arancione animata senza aggiungere HTML
+   
+   STATO INIZIALE (default):
+   - width: 0 = linea invisibile
+   - position: absolute + bottom: 0 = posizionata sotto il testo
+   - left: 0 = parte dal bordo sinistro
+   
+   La transition su width crea l'animazione smooth quando cambia valore */
 .nav-list a::after {
-  content: "";
+  content: ""; /* Obbligatorio per far apparire il pseudo-elemento (anche se vuoto) */
   position: absolute;
   left: 0;
   bottom: 0;
-  width: 0;
+  width: 0; /* Larghezza iniziale 0 = invisibile */
   height: 2px;
   border-radius: 999px;
   background: linear-gradient(90deg, #ff7a3c, #ffd56b);
-  transition: width 0.2s ease;
+  transition: width 0.2s ease; /* Anima il cambiamento di width in 0.2 secondi */
 }
 
+/* Al passaggio del mouse, il testo schiarisce */
 .nav-list a:hover {
   color: var(--text);
 }
 
+/* STATO HOVER: la linea si espande da 0% a 100%
+   Creando effetto "disegna linea da sinistra a destra" */
 .nav-list a:hover::after {
-  width: 100%;
+  width: 100%; /* La transition su width crea l'animazione smooth */
 }
 
-/* Header actions */
-
+/* ===== HEADER ACTIONS (CARRELLO, PROFILO, ETC.) ===== */
 .header-actions {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
+/* Bottoni icona circolari con bordo sottile
+   - border-radius: 999px crea cerchio perfetto
+   - position: relative permette di posizionare badge assolutamente dentro
+   - text-decoration: none per rimuovere underline se usato come <a>
+   - inline-flex per allineare icona al centro perfettamente */
 .icon-btn {
   border-radius: 999px;
   padding: 0.55rem 0.7rem;
@@ -186,7 +264,7 @@ body {
   background: rgba(8, 12, 30, 0.8);
   cursor: pointer;
   font-size: 1.1rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s ease; /* Anima TUTTE le proprietà che cambiano */
   position: relative;
   text-decoration: none;
   display: inline-flex;
@@ -194,6 +272,11 @@ body {
   justify-content: center;
 }
 
+/* Hover effect con micro-interazioni:
+   - background cambia a tinta accent
+   - bordo diventa arancione
+   - translateY(-2px) solleva il bottone di 2px
+   - box-shadow aggiunge glow arancione */
 .icon-btn:hover {
   background: rgba(255, 122, 60, 0.15);
   border-color: var(--accent);
@@ -201,14 +284,29 @@ body {
   box-shadow: 0 4px 12px rgba(255, 122, 60, 0.2);
 }
 
+/* ===== CARRELLO CON ANIMAZIONE SHAKE ===== */
+/* Pulsante carrello ha position: relative per posizionare il badge contatore */
 .cart-btn {
   position: relative;
 }
 
+/* Al passaggio del mouse, trigger animazione shake per attirare attenzione
+   animation: nome durata easing */
 .cart-btn:hover {
   animation: cart-shake 0.5s ease;
 }
 
+/* KEYFRAMES: definiscono gli step dell'animazione shake
+   L'animazione oscilla il carrello avanti e indietro (rotate -5deg / +5deg)
+   mantenendo il sollevamento translateY(-2px) dall'hover dell'icon-btn
+   
+   Timeline:
+   0% = posizione normale (0deg)
+   25% = ruota -5 gradi (sinistra)
+   75% = ruota +5 gradi (destra) 
+   100% = torna a 0 gradi
+   
+   Questo crea effetto "scuoti" in 0.5 secondi */
 @keyframes cart-shake {
   0%,
   100% {
@@ -222,13 +320,19 @@ body {
   }
 }
 
+/* ===== BADGE CONTATORE CARRELLO ===== */
+/* Badge circolare posizionato in alto a destra del pulsante carrello
+   - position: absolute con top/right negativi = esce dal confine del parent
+   - min-width + padding garantiscono che anche numeri doppi cifre siano ben contenuti
+   - flexbox centra il numero all'interno del badge
+   - animation: pulse attira l'attenzione con pulsazione continua */
 .cart-count {
   position: absolute;
-  top: -6px;
-  right: -6px;
+  top: -6px; /* Sposta sopra il bordo superiore */
+  right: -6px; /* Sposta oltre il bordo destro */
   min-width: 18px;
   height: 18px;
-  padding: 0 5px;
+  padding: 0 5px; /* Padding orizzontale per numeri a 2+ cifre */
   border-radius: var(--radius-pill);
   display: flex;
   align-items: center;
@@ -238,9 +342,16 @@ body {
   font-size: 0.7rem;
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(255, 122, 60, 0.4);
-  animation: pulse 2s infinite;
+  animation: pulse 2s infinite; /* Loop infinito ogni 2 secondi */
 }
 
+/* KEYFRAMES PULSE: animazione che ingrandisce e rimpicciolisce il badge
+   per attirare l'attenzione dell'utente sul numero di articoli
+   
+   0% e 100% = scala normale (1 = 100%)
+   50% = scala ingrandita (1.1 = 110%)
+   
+   Crea effetto "respiro" continuo */
 @keyframes pulse {
   0%,
   100% {
@@ -260,12 +371,15 @@ body {
   cursor: pointer;
 }
 
-/* User Profile Circle */
-
+/* ===== DROPDOWN PROFILO UTENTE ===== */
+/* Wrapper con position: relative per contenere il dropdown assoluto */
 .user-profile-wrapper {
   position: relative;
 }
 
+/* Cerchio avatar con gradiente e iniziali utente
+   border-radius: 50% crea cerchio perfetto da quadrato
+   flexbox centra le iniziali verticalmente e orizzontalmente */
 .user-profile-circle {
   width: 40px;
   height: 40px;
@@ -283,10 +397,22 @@ body {
 }
 
 .user-profile-circle:hover {
-  transform: translateY(-2px) scale(1.05);
+  transform: translateY(-2px) scale(1.05); /* Solleva e ingrandisce leggermente */
   box-shadow: 0 6px 20px rgba(255, 122, 60, 0.5);
 }
 
+/* ===== DROPDOWN MENU - TECNICA VISIBILITY + OPACITY + TRANSFORM ===== */
+/* Menu dropdown nascosto di default con 3 proprietà:
+   1. opacity: 0 = invisibile (ma occupa ancora spazio nel layout)
+   2. visibility: hidden = non interagibile e non occupa spazio
+   3. transform: translateY(-10px) = posizionato 10px più in alto
+   
+   Combinare opacity + visibility è necessario perché:
+   - opacity: 0 da sola lascerebbe il menu cliccabile anche se invisibile
+   - visibility: hidden da sola non potrebbe essere animata smoothly
+   
+   position: absolute + top: calc(100% + 10px) posiziona il menu
+   sotto il cerchio con 10px di gap */
 .user-dropdown {
   position: absolute;
   top: calc(100% + 10px);
@@ -296,18 +422,20 @@ body {
   border-radius: 16px;
   min-width: 240px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
+  opacity: 0; /* Invisibile */
+  visibility: hidden; /* Non cliccabile */
+  transform: translateY(-10px); /* Spostato in alto di 10px */
+  transition: all 0.3s ease; /* Anima tutte e 3 le proprietà */
   z-index: 1000;
   overflow: hidden;
 }
 
+/* Classe .show applicata via JavaScript per mostrare il dropdown
+   Inverte tutti i valori: menu diventa visibile, cliccabile e nella posizione corretta */
 .user-dropdown.show {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translateY(0); /* Posizione finale corretta */
 }
 
 .user-dropdown-header {
@@ -347,11 +475,17 @@ body {
   font-size: 0.95rem;
 }
 
-/* Search Dropdown */
+/* ===== RICERCA GLOBALE DROPDOWN ===== */
+/* Dropdown per ricerca prodotti in tempo reale dall'header */
 .search-dropdown-wrapper {
   position: relative;
 }
 
+/* Container dropdown ricerca con stessa tecnica visibility/opacity
+   - width: 400px fisso per desktop
+   - max-height: 500px con overflow per scroll se molti risultati
+   - z-index: 9999 = sopra TUTTO (header è 20, modal tipicamente 1000)
+   - display: flex + flex-direction: column per strutturare input + risultati */
 .search-dropdown {
   position: absolute;
   top: calc(100% + 10px);
@@ -366,7 +500,7 @@ body {
   visibility: hidden;
   transform: translateY(-10px);
   transition: all 0.3s ease;
-  z-index: 9999;
+  z-index: 9999; /* Layer sopra tutto per evitare sovrapposizioni */
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -505,8 +639,15 @@ body {
   background: rgba(255, 122, 60, 0.1);
 }
 
-/* Mobile nav */
-
+/* ===== NAVIGAZIONE MOBILE (HAMBURGER MENU) ===== */
+/* Menu mobile nascosto di default, appare solo su schermi piccoli (media query)
+   Usa max-height per animazione apertura/chiusura smooth:
+   - max-height: 0 = chiuso (contenuto nascosto)
+   - max-height: 500px = aperto (contenuto visibile)
+   
+   Perché max-height invece di height?
+   - height con valore auto non è animabile
+   - max-height con valore grande permette transizione smooth */
 .nav-mobile {
   display: none;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -515,16 +656,18 @@ body {
     rgba(5, 8, 22, 0.98) 0%,
     rgba(15, 18, 32, 0.98) 100%
   );
-  max-height: 0;
+  max-height: 0; /* Stato chiuso */
   overflow: hidden;
   transition: max-height 0.3s ease-in-out;
 }
 
+/* Classe .is-open applicata via JavaScript */
 .nav-mobile.is-open {
   display: block;
-  max-height: 500px;
+  max-height: 500px; /* Stato aperto - valore grande abbastanza per contenere tutti i link */
 }
 
+/* Lista link con animazione slideIn al primo apparire */
 .nav-mobile ul {
   list-style: none;
   margin: 0;
@@ -543,12 +686,21 @@ body {
   }
 }
 
+/* ===== ANIMAZIONE STAGGERED CON NTH-CHILD ===== */
+/* Ogni <li> appare con delay progressivo per effetto cascata
+   - opacity: 0 iniziale
+   - animation: fadeInUp con forwards (mantiene stato finale)
+   - nth-child(N) seleziona l'N-esimo elemento
+   - animation-delay incrementale (0.05s, 0.1s, 0.15s...)
+   
+   Risultato: i link appaiono uno dopo l'altro dall'alto */
 .nav-mobile li {
   margin-bottom: 0.8rem;
   opacity: 0;
   animation: fadeInUp 0.3s ease-out forwards;
 }
 
+/* Delay progressivo: ogni link aspetta 0.05s in più del precedente */
 .nav-mobile li:nth-child(1) {
   animation-delay: 0.05s;
 }
@@ -575,6 +727,12 @@ body {
   }
 }
 
+/* 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        5. BOTTONI E COMPONENTI COMUNI                        ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/
+
 .nav-mobile a {
   text-decoration: none;
   color: var(--text-soft);
@@ -593,8 +751,12 @@ body {
   background: rgba(255, 122, 60, 0.05);
 }
 
-/* Buttons */
-
+/* ===== BOTTONI ===== */
+/* Bottone primario con gradiente e ombra pronunciata
+   - border-radius: pill (999px) crea bordi completamente arrotondati
+   - linear-gradient crea sfondo con transizione arancione -> giallo
+   - box-shadow con blur e colore accent crea effetto glow
+   - white-space: nowrap previene a capo del testo */
 .btn {
   border-radius: var(--radius-pill);
   border: none;
@@ -608,10 +770,12 @@ body {
   white-space: nowrap;
 }
 
+/* Hover con filter: brightness aumenta luminosità del gradiente */
 .btn:hover {
   filter: brightness(1.05);
 }
 
+/* Variante outline: solo bordo, sfondo trasparente */
 .btn-outline {
   background: transparent;
   color: var(--text);
@@ -624,6 +788,7 @@ body {
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* Variante ghost: completamente trasparente finché non hover */
 .btn-ghost {
   background: transparent;
   border-radius: var(--radius-pill);
@@ -637,127 +802,30 @@ body {
   background: rgba(255, 255, 255, 0.02);
 }
 
+/* Variante small: padding e font ridotti */
 .btn-sm {
   padding: 0.45rem 1rem;
   font-size: 0.8rem;
 }
 
-/* Hero */
-
-/* .hero {
-  padding: 3.5rem 0 3rem;
-}
-
-.hero-inner {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-  gap: 3rem;
-  align-items: center;
-}
-
-.hero-text h1 {
-  font-size: clamp(2.4rem, 4vw, 3rem);
-  margin: 0 0 0.8rem;
-}
-
-.hero-text p {
-  margin: 0 0 1.5rem;
-  color: var(--text-soft);
-  font-size: 0.98rem;
-  max-width: 460px;
-}
-
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-}
-
-.hero-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  font-size: 0.75rem;
-  color: var(--text-soft);
-}
-
-.hero-badges span {
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border-subtle);
-  padding: 0.35rem 0.75rem;
-  background: rgba(8, 12, 32, 0.8);
-}
-
-/* Hero visual */
 /* 
-.hero-visual {
-  position: relative;
-  min-height: 260px;
-}
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           6. PAGINA HOME (INDEX)                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/
 
-.hero-card {
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-subtle);
-  background: radial-gradient(circle at top, #202744, #080b1a);
-  padding: 1rem;
-  box-shadow: var(--shadow-soft);
-}
-
-.hero-card-main {
-  position: absolute;
-  inset: 0;
-}
-
-.hero-card-image {
-  border-radius: var(--radius-md);
-  height: 190px;
-  margin-bottom: 0.9rem;
-  background-image: linear-gradient(
-      135deg,
-      rgba(5, 8, 22, 0.1),
-      rgba(5, 8, 22, 0.7)
-    ),
-    url("https://via.placeholder.com/600x400.png?text=Stampa+digitale");
-  background-size: cover;
-  background-position: center;
-}
-
-.hero-card-info h3 {
-  margin: 0 0 0.2rem;
-  font-size: 1.05rem;
-}
-
-.hero-card-info p {
-  margin: 0;
-  color: var(--text-soft);
-  font-size: 0.85rem;
-}
-
-
-
-.price {
-  margin-top: 0.5rem;
-  display: inline-block;
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.hero-card-secondary {
-  position: absolute;
-  right: -18px;
-  bottom: -18px;
-  width: 70%;
-  font-size: 0.85rem;
-  background: radial-gradient(circle at top left, #ff7a3c33, #080b1a);
-} */
-/* === HERO IDEA 1 — Galleria pronta da appendere === */
-
+/* ===== SEZIONE HERO HOMEPAGE ===== */
+/* Hero full-width con immagine di sfondo
+   - height: 75vh = 75% dell'altezza viewport
+   - min-height: 500px garantisce altezza minima su schermi piccoli
+   - background-size: cover fa sì che l'immagine copra tutto lo spazio
+   - background-position: center centra l'immagine anche se troppo grande
+   - flexbox centra il contenuto verticalmente e orizzontalmente */
 .hero-simple {
   position: relative;
   height: 75vh;
   min-height: 500px;
-  background-image: url("../img/sfondoHome.png"); /* QUI IL TUO FILE */
+  background-image: url("../img/sfondoHome.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -767,13 +835,20 @@ body {
   text-align: center;
 }
 
+/* Overlay scuro per migliorare leggibilità del testo sopra immagine
+   - inset: 0 = shorthand per top/right/bottom/left: 0 (copre tutto il parent)
+   - backdrop-filter: blur() sfoca l'immagine sotto l'overlay per effetto depth
+   - position: absolute + inset crea layer tra immagine e contenuto */
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55); /* scurisce per leggibilità */
+  background: rgba(0, 0, 0, 0.55); /* Nero semi-trasparente */
   backdrop-filter: blur(2px);
 }
 
+/* Contenuto hero sopra overlay
+   - z-index: 2 garantisce che stia sopra l'overlay (che è z-index: 1 default)
+   - position: relative necessario per far funzionare z-index */
 .hero-content {
   position: relative;
   z-index: 2;
@@ -781,6 +856,12 @@ body {
   padding: 1rem;
 }
 
+/* Titolo responsivo con clamp()
+   clamp(min, preferred, max) sceglie valore tra min e max in base a viewport
+   - 2.3rem = dimensione minima (mobile)
+   - 5vw = dimensione preferita basata su viewport width
+   - 3.4rem = dimensione massima (desktop)
+   Esempio: su 1920px viewport, 5vw = 96px, ma clamp limita a 3.4rem */
 .hero-content h1 {
   font-size: clamp(2.3rem, 5vw, 3.4rem);
   margin-bottom: 1rem;
@@ -914,21 +995,18 @@ body {
   cursor: pointer;
 }
 
-/* Pills */
-
-.section-header-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 1.5rem;
-  align-items: flex-end;
-}
-
+/* ===== FILTRI CATEGORIA (PILLS) ===== */
+/* Pills per filtrare prodotti per categoria
+   - flex-wrap: wrap permette di andare a capo su più righe se necessario */
 .pills {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
+/* Singola pill cliccabile
+   - border-radius: pill per bordi completamente arrotondati
+   - cursor: pointer indica cliccabilità */
 .pill {
   border-radius: var(--radius-pill);
   border: 1px solid var(--border-subtle);
@@ -937,22 +1015,33 @@ body {
   font-size: 0.8rem;
   cursor: pointer;
   color: var(--text-soft);
+  transition: all 0.2s ease;
 }
 
+/* Pill attiva (categoria selezionata)
+   Evidenziata con background accent e bordo più visibile */
 .pill-active {
   background: var(--accent-soft);
   color: #ffd56b;
   border-color: rgba(255, 122, 60, 0.7);
 }
 
-/* Products */
-
+/* ===== GRIGLIA PRODOTTI RESPONSIVE ===== */
+/* Grid a 4 colonne con CSS Grid
+   - repeat(4, minmax(0, 1fr)) = 4 colonne di uguale larghezza
+   - minmax(0, 1fr) previene overflow con contenuto largo
+   - gap usa variabile CSS per spaziatura consistente */
 .products-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--gap);
 }
 
+/* ===== CARD PRODOTTO ===== */
+/* Card con flex-direction: column per struttura verticale
+   - height: 100% fa sì che tutte le card abbiano la stessa altezza nella grid
+   - overflow: hidden nasconde contenuto che esce dal border-radius
+   - transition su transform e box-shadow per hover effect smooth */
 .product-card {
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-subtle);
@@ -960,9 +1049,21 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  height: 100%; /* Assicura che tutte le card abbiano la stessa altezza */
+  height: 100%;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
+/* Hover: translateY negativo solleva la card, box-shadow aggiunge glow */
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(255, 122, 60, 0.2);
+}
+
+/* Immagine prodotto con altezza fissa per uniformità
+   background-size: cover scala l'immagine per coprire tutto lo spazio
+   background-position: center centra l'immagine anche se cropata */
 .product-image {
   width: 100%;
   height: 280px;
@@ -973,9 +1074,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid var(--border-subtle); /* separa dalla descrizione */
+  border-bottom: 1px solid var(--border-subtle);
 }
 
+/* Overlay con backdrop-filter per depth effect */
 .product-image-overlay {
   position: absolute;
   inset: 0;
@@ -991,59 +1093,54 @@ body {
   opacity: 0.7;
 }
 
-.product-image-1 {
-  background-image:
-    linear-gradient(135deg, rgba(5, 8, 22, 0.4), transparent),
-    url("https://via.placeholder.com/600x400.png?text=Sunrise");
-}
-
-.product-image-2 {
-  background-image:
-    linear-gradient(135deg, rgba(5, 8, 22, 0.4), transparent),
-    url("https://via.placeholder.com/600x400.png?text=City+Lights");
-}
-
-.product-image-3 {
-  background-image:
-    linear-gradient(135deg, rgba(5, 8, 22, 0.4), transparent),
-    url("https://via.placeholder.com/600x400.png?text=Botanical+Trio");
-}
-
-.product-image-4 {
-  background-image:
-    linear-gradient(135deg, rgba(5, 8, 22, 0.4), transparent),
-    url("https://via.placeholder.com/600x400.png?text=Shapes+Calm");
-}
-
+/* ===== TECNICA FLEX: 1 PER UNIFORMARE ALTEZZE ===== */
+/* Body card con flex: 1
+   Questo fa sì che il body occupi TUTTO lo spazio rimanente disponibile
+   nella card, spingendo il prezzo/bottone sempre in fondo
+   
+   Esempio: se una card ha titolo corto e un'altra lungo,
+   flex: 1 compensa la differenza allungando lo spazio del body
+   così che i bottoni siano sempre allineati in basso */
 .product-body {
   padding: 1rem 1rem 1.1rem;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  flex: 1; /* Fa sì che il body occupi tutto lo spazio disponibile */
+  flex: 1;
 }
 
+/* ===== TECNICA LINE-CLAMP PER TRONCARE TESTO ===== */
+/* Titolo prodotto troncato a 2 righe
+   -webkit-line-clamp è tecnica WebKit per limitare righe visibili
+   Richiede 3 proprietà insieme:
+   1. display: -webkit-box
+   2. -webkit-box-orient: vertical
+   3. -webkit-line-clamp: N (numero righe)
+   4. overflow: hidden (nasconde il resto)
+   
+   Aggiunge automaticamente "..." alla fine */
 .product-body h3 {
   margin: 0;
   font-size: 0.95rem;
-  min-height: 2.4rem; /* Altezza minima per 2 righe di titolo */
+  min-height: 2.4rem; /* Altezza fissa per 2 righe, anche se testo è corto */
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* Limita a 2 righe */
+
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
+/* Descrizione troncata a 3 righe con stessa tecnica */
 .product-desc {
   margin: 0;
   color: var(--text-soft);
   font-size: 0.8rem;
-  min-height: 2.8rem; /* Altezza minima per 2-3 righe di descrizione */
+  min-height: 2.8rem;
   display: -webkit-box;
-  -webkit-line-clamp: 3; /* Limita a 3 righe */
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
+/* Metadata: prezzo e tag */
 .product-meta {
   display: flex;
   align-items: center;
@@ -1051,6 +1148,7 @@ body {
   margin: 0.3rem 0 0.4rem;
 }
 
+/* Badge categoria/tag */
 .tag {
   border-radius: var(--radius-pill);
   padding: 0.1rem 0.5rem;
@@ -1418,6 +1516,13 @@ body {
     align-items: flex-start;
   }
 }
+
+/* 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    7. PAGINE AUTENTICAZIONE (LOGIN/REGISTER)                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/
+
 /* ===== PAGINE AUTH (LOGIN / REGISTER) ===== */
 
 .auth-page {
@@ -1730,15 +1835,13 @@ textarea.input-success:focus {
   }
 }
 
-/* ========================================
-   PAGINA PRODOTTI
-======================================== */
+/* ===== PAGINA PRODOTTI ===== */
 
 .hero-products {
   min-height: 300px;
 }
 
-/* Sezione filtri */
+/* Barra filtri con select e search */
 .filters-section {
   background: rgba(10, 14, 32, 0.6);
   padding: 1.5rem 0;
@@ -1752,6 +1855,7 @@ textarea.input-success:focus {
   align-items: center;
 }
 
+/* Gruppo singolo filtro (label + select) */
 .filter-group {
   display: flex;
   align-items: center;
@@ -1764,6 +1868,7 @@ textarea.input-success:focus {
   white-space: nowrap;
 }
 
+/* Select dropdown filtro */
 .filter-select {
   padding: 0.5rem 0.8rem;
   border-radius: var(--radius-md);
@@ -1775,6 +1880,7 @@ textarea.input-success:focus {
   min-width: 150px;
 }
 
+/* Stile opzioni dropdown */
 .filter-select option {
   background-color: #0b1020;
   background: #0b1020;
@@ -1787,6 +1893,7 @@ textarea.input-success:focus {
   outline-offset: 2px;
 }
 
+/* Box ricerca prodotti */
 .search-box {
   flex: 1;
   min-width: 250px;
@@ -1872,18 +1979,20 @@ textarea.input-success:focus {
   width: 100%;
 }
 
-/* Responsive prodotti */
+/* Responsive prodotti: 3 colonne su tablet */
 @media (max-width: 1024px) {
   .products-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
+/* 2 colonne su mobile landscape */
 @media (max-width: 768px) {
   .products-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  /* Filtri in colonna su mobile */
   .filters-bar {
     flex-direction: column;
     align-items: stretch;
@@ -1903,6 +2012,7 @@ textarea.input-success:focus {
   }
 }
 
+/* 1 colonna su mobile portrait */
 @media (max-width: 480px) {
   .products-grid {
     grid-template-columns: 1fr;
@@ -1913,9 +2023,7 @@ textarea.input-success:focus {
   }
 }
 
-/* ========================================
-   PAGINA CARRELLO
-======================================== */
+/* ===== PAGINA CARRELLO ===== */
 
 .hero-cart {
   min-height: 280px;
@@ -1925,6 +2033,11 @@ textarea.input-success:focus {
   padding: 2rem 0 4rem;
 }
 
+/* ===== LAYOUT CARRELLO 2 COLONNE ===== */
+/* Grid con sidebar fissa a destra
+   - 1fr = colonna sinistra prende spazio rimanente (responsive)
+   - 400px = sidebar destra larghezza fissa
+   - align-items: start previene stretching verticale */
 .cart-layout {
   display: grid;
   grid-template-columns: 1fr 400px;
@@ -1932,7 +2045,7 @@ textarea.input-success:focus {
   align-items: start;
 }
 
-/* Lista articoli carrello */
+/* Container lista articoli con glassmorphism effect */
 .cart-items-container {
   background: rgba(10, 14, 32, 0.7);
   border: 1px solid var(--border-subtle);
@@ -1941,6 +2054,7 @@ textarea.input-success:focus {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
+/* Header con flex per distribuire titolo e pulsante */
 .cart-header {
   display: flex;
   justify-content: space-between;
@@ -2152,7 +2266,12 @@ textarea.input-success:focus {
   transform: rotate(10deg) scale(0.95);
 }
 
-/* Riepilogo ordine */
+/* ===== RIEPILOGO ORDINE CON STICKY POSITION ===== */
+/* Sidebar che rimane fissa durante scroll
+   - position: sticky mantiene elemento nella posizione relativa finché
+     non raggiunge top: 90px, poi diventa fisso
+   - top: 90px = distanza dall'header fisso (70px header + 20px gap)
+   - Permette di vedere sempre il totale mentre si scrolla la lista articoli */
 .cart-summary {
   position: sticky;
   top: 90px;
@@ -2169,6 +2288,7 @@ textarea.input-success:focus {
   font-weight: 700;
 }
 
+/* Riga riepilogo con flex space-between per label e valore */
 .summary-row {
   display: flex;
   justify-content: space-between;
@@ -2186,11 +2306,13 @@ textarea.input-success:focus {
   color: var(--text);
 }
 
+/* Sconto evidenziato in verde */
 .summary-discount span:last-child {
   color: #43e97b;
   font-weight: 700;
 }
 
+/* Divider decorativo con gradiente orizzontale */
 .summary-divider {
   height: 2px;
   background: linear-gradient(
@@ -2202,6 +2324,7 @@ textarea.input-success:focus {
   margin: 1.5rem 0;
 }
 
+/* Totale finale con bordo accent sopra per evidenziare */
 .summary-total {
   font-size: 1.3rem;
   margin-top: 1.2rem;
@@ -2214,12 +2337,13 @@ textarea.input-success:focus {
   font-weight: 700;
 }
 
+/* Prezzo totale più grande e accent color */
 .summary-total span:last-child {
   color: var(--accent);
   font-size: 1.7rem;
 }
 
-/* Codice promo */
+/* Input codice promozionale */
 .promo-code {
   display: flex;
   gap: 0.6rem;
@@ -2249,7 +2373,7 @@ textarea.input-success:focus {
   background: rgba(18, 24, 42, 0.5);
 }
 
-/* Bottone checkout */
+/* Bottone checkout principale con gradiente */
 .btn-checkout {
   width: 100%;
   padding: 1.2rem;
@@ -2275,7 +2399,7 @@ textarea.input-success:focus {
   transform: translateY(0);
 }
 
-/* Info pagamento sicuro */
+/* Testo pagamento sicuro */
 .checkout-secure {
   text-align: center;
   color: var(--text-soft);
@@ -2718,8 +2842,14 @@ body.modal-open {
   }
 }
 
+/* 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                            11. PAGINA CHECKOUT                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/
+
 /* ========================================
-   CHECKOUT PAGE
+   SEZIONE: Layout e Form Checkout
 ======================================== */
 
 .checkout-grid {
@@ -2916,8 +3046,14 @@ body.modal-open {
   color: var(--accent);
 }
 
+/* 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        12. PAGINA CONFERMA ORDINE                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/
+
 /* ========================================
-   ORDER SUCCESS PAGE
+   SEZIONE: Messaggio Successo e Dettagli Ordine
 ======================================== */
 
 .success-page {
@@ -3070,8 +3206,14 @@ body.modal-open {
   }
 }
 
+/* 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                       13. PAGINA DETTAGLIO PRODOTTO                          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/
+
 /* ========================================
-   PAGINA DETTAGLIO PRODOTTO
+   SEZIONE: Layout e Informazioni Prodotto
    ======================================== */
 .product-detail-section {
   min-height: calc(100vh - 80px - 200px);
@@ -3402,8 +3544,14 @@ body.modal-open {
   }
 }
 
+/* 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         14. PAGINA PROFILO UTENTE                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/
+
 /* ========================================
-   PAGINA PROFILO
+   SEZIONE: Dati Personali e Storico Ordini
    ======================================== */
 .profile-section {
   min-height: calc(100vh - 80px - 200px);
@@ -3731,8 +3879,14 @@ body.modal-open {
   }
 }
 
+/* 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          15. PAGINA PREFERITI                                ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/
+
 /* ========================================
-   PAGINA PREFERITI
+   SEZIONE: Lista Prodotti Preferiti
    ======================================== */
 .favorites-section {
   min-height: calc(100vh - 80px - 200px);
@@ -3896,7 +4050,15 @@ body.modal-open {
   }
 }
 
-/* ==================== SPA STYLES ==================== */
+/* 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                       15. STILI SINGLE PAGE APPLICATION                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/
+
+/* ========================================
+   SEZIONE: Transizioni e Routing SPA
+======================================== */
 
 /* Initial loader */
 .initial-loader {
@@ -4064,7 +4226,15 @@ a[data-link] {
   }
 }
 
-/* ==================== ADMIN DASHBOARD STYLES ==================== */
+/* 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         16. DASHBOARD AMMINISTRATORE                         ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/
+
+/* ========================================
+   SEZIONE: Gestione Prodotti e Utenti
+======================================== */
 
 .admin-section {
   padding: 3rem 0;
@@ -4229,6 +4399,16 @@ a[data-link] {
 .btn-view:hover {
   background: var(--border-subtle);
 }
+
+/* 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                   17. MODALI E FINESTRE DI DIALOGO                           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/
+
+/* ========================================
+   SEZIONE: Struttura e Stili Modali Generici
+   ======================================== */
 
 /* Modal Styles */
 .modal {
@@ -4780,3 +4960,113 @@ table tbody tr.blocked-user {
   color: #4ade80;
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
+
+/* 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      STRUTTURA FILE CSS - RIEPILOGO                          ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  1.  CONFIGURAZIONE E VARIABILI GLOBALI                                     ║
+║      - Custom Properties (colori, spaziature, bordi)                        ║
+║                                                                              ║
+║  2.  RESET E STILI BASE                                                     ║
+║      - Reset universale (box-sizing)                                        ║
+║      - HTML/Body base styles                                                ║
+║                                                                              ║
+║  3.  LAYOUT GLOBALE E CONTAINER                                             ║
+║      - Container responsive                                                 ║
+║      - Sezioni e spacing                                                    ║
+║                                                                              ║
+║  4.  HEADER E NAVIGAZIONE PRINCIPALE                                        ║
+║      - Header sticky con glassmorphism                                      ║
+║      - Logo e navigazione desktop                                           ║
+║      - Badge carrello e dropdown profilo                                    ║
+║      - Ricerca globale                                                      ║
+║      - Menu mobile hamburger                                                ║
+║                                                                              ║
+║  5.  BOTTONI E COMPONENTI COMUNI                                            ║
+║      - Bottoni (primary, secondary, outline, ghost)                         ║
+║      - Tag e badge                                                          ║
+║      - Form controls                                                        ║
+║                                                                              ║
+║  6.  PAGINA HOME (INDEX)                                                    ║
+║      - Hero section                                                         ║
+║      - Filtri categoria (pills)                                             ║
+║      - Griglia prodotti                                                     ║
+║      - Card prodotto                                                        ║
+║                                                                              ║
+║  7.  PAGINE AUTENTICAZIONE (LOGIN/REGISTER)                                 ║
+║      - Layout auth page                                                     ║
+║      - Form login/registrazione                                             ║
+║      - Validazione campi                                                    ║
+║                                                                              ║
+║  8.  PAGINA CATALOGO PRODOTTI                                               ║
+║      - Hero prodotti                                                        ║
+║      - Filtri e ordinamento                                                 ║
+║      - Griglia catalogo                                                     ║
+║                                                                              ║
+║  9.  PAGINA CARRELLO                                                        ║
+║      - Layout 2 colonne                                                     ║
+║      - Lista articoli carrello                                              ║
+║      - Riepilogo ordine (sticky sidebar)                                    ║
+║      - Carrello vuoto                                                       ║
+║      - Modali carrello                                                      ║
+║                                                                              ║
+║  10. PAGINA CHECKOUT                                                        ║
+║      - Form dati spedizione                                                 ║
+║      - Riepilogo ordine finale                                              ║
+║      - Validazione campi                                                    ║
+║                                                                              ║
+║  11. PAGINA CONFERMA ORDINE                                                 ║
+║      - Success message                                                      ║
+║      - Dettagli ordine completato                                           ║
+║                                                                              ║
+║  12. PAGINA DETTAGLIO PRODOTTO                                              ║
+║      - Layout immagine + info                                               ║
+║      - Selettore quantità                                                   ║
+║      - Pulsanti acquisto                                                    ║
+║      - Prodotti correlati                                                   ║
+║                                                                              ║
+║  13. PAGINA PROFILO UTENTE                                                  ║
+║      - Informazioni personali                                               ║
+║      - Storico ordini                                                       ║
+║      - Modale modifica profilo                                              ║
+║      - Modale cambio password                                               ║
+║                                                                              ║
+║  14. PAGINA PREFERITI                                                       ║
+║      - Griglia prodotti preferiti                                           ║
+║      - Stato vuoto                                                          ║
+║      - Pulsanti rimuovi/aggiungi carrello                                   ║
+║                                                                              ║
+║  15. STILI SINGLE PAGE APPLICATION                                          ║
+║      - Transizioni tra pagine                                               ║
+║      - Gestione routing                                                     ║
+║      - Animazioni fade/slide                                                ║
+║                                                                              ║
+║  16. DASHBOARD AMMINISTRATORE                                               ║
+║      - Statistiche e cards                                                  ║
+║      - Tabelle prodotti/utenti                                              ║
+║      - Form gestione                                                        ║
+║      - Azioni admin                                                         ║
+║                                                                              ║
+║  17. MODALI E FINESTRE DI DIALOGO                                           ║
+║      - Struttura modale generica                                            ║
+║      - Overlay e backdrop                                                   ║
+║      - Animazioni apertura/chiusura                                         ║
+║      - Modali specifiche (reset password, conferme)                         ║
+║                                                                              ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║  TECNICHE CSS UTILIZZATE:                                                   ║
+║  - Custom Properties (variabili CSS)                                        ║
+║  - Flexbox per layout responsive                                            ║
+║  - CSS Grid per griglie prodotti                                            ║
+║  - Position Sticky per header e sidebar                                     ║
+║  - Backdrop-filter per glassmorphism                                        ║
+║  - Pseudo-elementi (::before, ::after) per decorazioni                      ║
+║  - Animazioni @keyframes                                                    ║
+║  - Transform e Transition per interazioni                                   ║
+║  - Line-clamp per troncare testo                                            ║
+║  - Media queries per responsive design                                      ║
+║  - nth-child per animazioni staggered                                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/

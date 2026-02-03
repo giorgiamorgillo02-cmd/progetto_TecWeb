@@ -1,10 +1,14 @@
 <?php
-
-/**
- * Classe Prodotto - Gestione Object-Oriented dei prodotti (posters)
- * 
- * Questa classe incapsula la logica di business per i prodotti,
- * fornendo metodi per CRUD operations e validazione dati.
+/* Classe prodotto per: 
+    - costruttore: __construct($conn, $id = null)
+    - caricare dati prodotto dal db: carica()
+    - salvare nuovo prodotto nel db: salva()
+    - aggiornare prodotto esistente nel db: aggiorna($dati)
+    - eliminare prodotto dal db: elimina()
+    - ottenere lista prodotti con filtri opzionali: getAll($conn, $filtri = [])
+    - convertire oggetto in array associativo: toArray()
+    - validare dati prodotto: valida()
+    - getter e setter
  */
 class Prodotto {
     // Proprietà private (incapsulamento)
@@ -18,12 +22,8 @@ class Prodotto {
     private $id_categoria;
     private $categoria_nome;
 
-    /**
-     * Costruttore
-     * @param PDO $conn - Connessione al database
-     * @param int|null $id - ID del prodotto (opzionale)
-     */
-    public function __construct($conn, $id = null) {
+    // Costruttore
+    public function __construct($conn, $id = null) { //connessione al db + id prodotto (opzionale)
         $this->conn = $conn;
         $this->id = $id;
         
@@ -33,30 +33,31 @@ class Prodotto {
         }
     }
 
-    /**
-     * Carica i dati del prodotto dal database
-     * @return bool - true se il prodotto esiste, false altrimenti
-     */
+//CARICA DATI PRODOTTO DAL DB (restituisce booleano)
  public function carica() {
+    //se id non impostato -> non carica 
     if ($this->id === null) return false;
 
+    //query per ottenere dati prodotto
     $sql = "SELECT p.id, p.titolo, p.descrizione, p.autore, p.prezzo, p.image_path,
                    p.id_categoria, c.nome as categoria_nome
             FROM posters p
             LEFT JOIN categorie c ON p.id_categoria = c.id
             WHERE p.id = :id";
 
-    $stmt = $this->conn->prepare($sql);
-    $stmt->bindValue(':id', $this->id, PDO::PARAM_INT);
+    $stmt = $this->conn->prepare($sql); //prepara query
+    $stmt->bindValue(':id', $this->id, PDO::PARAM_INT); 
     $stmt->execute();
 
-    $data = $stmt->fetch(PDO::FETCH_ASSOC); // se non c'è riga => false [web:26]
-
+    //ottiene dati come array associativo
+    $data = $stmt->fetch(PDO::FETCH_ASSOC); 
+    //se nessun dato trovato -> id non valido
     if (!$data) {
-        $this->id = null;          // questa è la chiave
+        $this->id = null;         
         return false;
     }
 
+    //imposta proprietà oggetto con dati dal db
     $this->titolo = $data['titolo'];
     $this->descrizione = $data['descrizione'];
     $this->autore = $data['autore'];
@@ -69,27 +70,25 @@ class Prodotto {
 }
 
 
-    /**
-     * Salva un nuovo prodotto nel database
-     * @return int|false - ID del prodotto creato o false in caso di errore
-     */
+    //SALVA NUOVO PRODOTTO NEL DB (restituisce id nuovo prodotto o false)
     public function salva() {
-        // Validazione
+        // se dati non validi -> non salva
         if (!$this->valida()) {
             return false;
         }
-
+        //query di inserimento
         $sql = "INSERT INTO posters (titolo, descrizione, autore, prezzo, image_path, id_categoria) 
                 VALUES (:titolo, :descrizione, :autore, :prezzo, :image_path, :id_categoria)";
         
-        $stmt = $this->conn->prepare($sql);
+        $stmt = $this->conn->prepare($sql); //prepara query
         $stmt->bindParam(':titolo', $this->titolo);
         $stmt->bindParam(':descrizione', $this->descrizione);
         $stmt->bindParam(':autore', $this->autore);
         $stmt->bindParam(':prezzo', $this->prezzo);
         $stmt->bindParam(':image_path', $this->image_path);
-        $stmt->bindParam(':id_categoria', $this->id_categoria, PDO::PARAM_INT);
+        $stmt->bindParam(':id_categoria', $this->id_categoria, PDO::PARAM_INT); //può essere null
         
+        //se esecuzione avvenuta con successo -> imposta id e lo restituisce
         if ($stmt->execute()) {
             $this->id = $this->conn->lastInsertId();
             return $this->id;
@@ -98,66 +97,60 @@ class Prodotto {
         return false;
     }
 
-    /**
-     * Aggiorna il prodotto esistente nel database
-     * @param array $dati - Array associativo con i campi da aggiornare
-     * @return bool - true se l'aggiornamento ha successo
-     */
+    //AGGIORNA PRODOTTO NEL DB (restituisce booleano)
     public function aggiorna($dati) {
+        //se id non impostato -> non aggiorna
         if ($this->id === null) {
             return false;
         }
 
-        $campiAggiornabili = ['titolo', 'descrizione', 'autore', 'prezzo', 'image_path', 'id_categoria'];
-        $setClauses = [];
-        $params = [':id' => $this->id];
+        $campiAggiornabili = ['titolo', 'descrizione', 'autore', 'prezzo', 'image_path', 'id_categoria']; //campi che possono essere aggiornati
+        $setClauses = []; //clausole SET della query
+        $params = [':id' => $this->id]; //parametri per la query
         
+        //ciclo sui campi aggiornabili se presenti in $dati -> aggiunge a query e parametri
         foreach ($campiAggiornabili as $campo) {
             if (isset($dati[$campo])) {
                 $setClauses[] = "$campo = :$campo";
                 $params[":$campo"] = $dati[$campo];
                 
-                // Aggiorna anche la proprietà dell'oggetto
+                // Aggiorna proprietà dell'oggetto
                 $this->$campo = $dati[$campo];
             }
         }
         
+        //se nessun campo da aggiornare -> non esegue query
         if (empty($setClauses)) {
             return false;
         }
         
-        $sql = "UPDATE posters SET " . implode(', ', $setClauses) . " WHERE id = :id";
+        $sql = "UPDATE posters SET " . implode(', ', $setClauses) . " WHERE id = :id"; //costruisce query (implode -> unisce clausole SET con virgole)
         $stmt = $this->conn->prepare($sql);
         
+        //ciclo per fare il bind dei parametri
         foreach ($params as $key => $value) {
             $stmt->bindValue($key, $value);
         }
         
-        return $stmt->execute();
+        return $stmt->execute(); //esegue query e restituisce risultato
     }
 
-    /**
-     * Elimina il prodotto dal database
-     * @return bool - true se l'eliminazione ha successo
-     */
+    //ELIMINA PRODOTTO DAL DB (restituisce booleano)
     public function elimina() {
+        //se id non impostato -> non elimina
         if ($this->id === null) {
             return false;
         }
-
+        //query di eliminazione (in base a id)
         $stmt = $this->conn->prepare("DELETE FROM posters WHERE id = :id");
         $stmt->bindParam(':id', $this->id, PDO::PARAM_INT);
         
         return $stmt->execute();
     }
 
-    /**
-     * Metodo statico per ottenere tutti i prodotti
-     * @param PDO $conn - Connessione al database
-     * @param array $filtri - Filtri opzionali (categoria, ricerca, etc.)
-     * @return array - Array di array associativi con i dati dei prodotti
-     */
+    //OTTENERE LISTA PRODOTTI DAL DB CON FILTRI OPZIONALI (restituisce array di prodotti)
     public static function getAll($conn, $filtri = []) {
+        //query di selezione
         $sql = "SELECT 
                     p.id, 
                     p.titolo, 
@@ -170,41 +163,40 @@ class Prodotto {
                 FROM posters p
                 LEFT JOIN categorie c ON p.id_categoria = c.id";
         
-        $conditions = [];
-        $params = [];
+        $conditions = []; //condizioni WHERE
+        $params = []; //parametri per la query
         
         // Applica filtri se presenti
-        if (!empty($filtri['categoria'])) {
+        if (!empty($filtri['categoria'])) { //filtro categoria
             $conditions[] = "p.id_categoria = :categoria";
             $params[':categoria'] = $filtri['categoria'];
         }
         
-        if (!empty($filtri['ricerca'])) {
+        if (!empty($filtri['ricerca'])) { //filtro ricerca (titolo, descrizione, autore)
             $conditions[] = "(p.titolo LIKE :ricerca OR p.descrizione LIKE :ricerca OR p.autore LIKE :ricerca)";
             $params[':ricerca'] = '%' . $filtri['ricerca'] . '%';
         }
         
+        //se ci sono condizioni -> le aggiunge alla query
         if (!empty($conditions)) {
             $sql .= " WHERE " . implode(' AND ', $conditions);
         }
         
-        $sql .= " ORDER BY p.id DESC";
+        $sql .= " ORDER BY p.id DESC"; //ordina per id decrescente (prodotti più recenti prima)
         
         $stmt = $conn->prepare($sql);
         
+        //bind dei parametri
         foreach ($params as $key => $value) {
             $stmt->bindValue($key, $value);
         }
         
         $stmt->execute();
         
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); //restituisce array di prodotti
     }
 
-    /**
-     * Converte l'oggetto in un array associativo
-     * @return array - Rappresentazione array del prodotto
-     */
+    //CONVERTI OGGETTO PRODOTTO IN ARRAY ASSOCIATIVO
     public function toArray() {
         return [
             'id' => $this->id,
@@ -218,15 +210,14 @@ class Prodotto {
         ];
     }
 
-    /**
-     * Validazione dei dati del prodotto
-     * @return bool - true se i dati sono validi
-     */
+    //VALIDA DATI PRODOTTO (restituisce booleano)
     private function valida() {
+        //se dati obbligatori mancanti -> false
         if (empty($this->titolo) || empty($this->descrizione) || empty($this->prezzo) || empty($this->image_path)) {
             return false;
         }
         
+        //se prezzo non è un numero positivo -> false
         if (!is_numeric($this->prezzo) || $this->prezzo <= 0) {
             return false;
         }

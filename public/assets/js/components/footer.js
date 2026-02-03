@@ -1,7 +1,8 @@
 // Componente Footer - Riutilizzabile in tutta l'applicazione
 class FooterComponent {
+  //costruisce e restituisce l'html
   render() {
-    const currentYear = new Date().getFullYear();
+    const currentYear = new Date().getFullYear(); //calcolo dinamico dell'anno corrente
 
     return `
       <footer class="footer">
@@ -47,6 +48,7 @@ class FooterComponent {
     `;
   }
 }
+//div toast -> permette di visualizzare toast in tutte le pagine dove è contenuto l'oggetto footer
 
-// Esporta istanza singleton
+// Esporta direttamente oggetto creato
 const footerComponent = new FooterComponent();

@@ -1,4 +1,4 @@
-// Componente Header riutilizzabile
+// CREA BARRA DI RICERCA NELLA HEADER (riutilizzabile)
 function createSearchDropdown() {
   return `
     <div class="search-dropdown-wrapper">
@@ -18,20 +18,21 @@ function createSearchDropdown() {
   `;
 }
 
-// Inizializza il dropdown di ricerca se non esiste già
+// INIZIALIZZA LA BARRA DI RICERCA
 function initSearchDropdownComponent() {
-  // Trova tutti i pulsanti di ricerca che non hanno ancora il dropdown
+  //trova tutti i pulsanti di ricerca
   const searchButtons = document.querySelectorAll(
     '.icon-btn[aria-label="Cerca"]',
   );
 
+  //cila sui bottoni trovati prima
   searchButtons.forEach((btn) => {
-    // Se il pulsante è già dentro un wrapper, salta
+    //se pulante ha gia classe wrapper -> esce
     if (btn.parentElement.classList.contains("search-dropdown-wrapper")) {
       return;
     }
 
-    // Crea un wrapper
+    //se pulante non ha classe wrapper -> crea elemento
     const wrapper = document.createElement("div");
     wrapper.className = "search-dropdown-wrapper";
 
@@ -39,7 +40,7 @@ function initSearchDropdownComponent() {
     btn.parentNode.insertBefore(wrapper, btn);
     wrapper.appendChild(btn);
 
-    // Aggiungi il dropdown HTML
+    // Aggiungi il dropdown HTML (appena prima la chiusura del div)
     wrapper.insertAdjacentHTML(
       "beforeend",
       `
@@ -59,7 +60,7 @@ function initSearchDropdownComponent() {
   });
 }
 
-// Inizializza all'avvio
+// INIZIALIZZA (solo quando è stato caricato tutto l'HTML)
 document.addEventListener("DOMContentLoaded", () => {
   initSearchDropdownComponent();
 });

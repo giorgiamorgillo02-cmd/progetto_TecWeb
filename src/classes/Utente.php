@@ -1,10 +1,21 @@
 <?php
 
 /**
- * Classe Utente - Gestione Object-Oriented degli utenti
+ * Classe Utente - Gestione OOP degli utenti del sistema
+ * incapsulamento sia i dati (modello) che le operazioni di business logic.
  * 
- * Questa classe incapsula la logica di business per gli utenti,
- * fornendo metodi per CRUD operations, autenticazione e gestione ordini.
+ * Funzionalità principali:
+ * - CRUD completo: creazione, lettura, aggiornamento e gestione utenti
+ * - Autenticazione: verifica password con supporto hash bcrypt
+ * - Validazione: controllo formato email, CAP, provincia, telefono
+ * - Gestione ordini: recupero storico ordini e statistiche utente
+ * - Controllo accessi: gestione ruoli (admin/utente) e blocco account
+ * - Sicurezza: protezione da email duplicate, hash password automatico
+ * 
+ * Pattern utilizzati:
+ * - Active Record: ogni istanza rappresenta un record del database
+ * - Encapsulation: proprietà private con getter/setter pubblici
+ * - Factory Methods: caricamento da ID o email
  */
 class Utente {
     // Proprietà private (incapsulamento)
@@ -30,6 +41,7 @@ class Utente {
     public function __construct($conn, $id = null) {
         $this->conn = $conn;
         $this->id = $id;
+        // Inizializza proprietà di default
         $this->ruolo = 0; // Default: utente normale
         $this->blocked = 0; // Default: non bloccato
         
@@ -53,12 +65,12 @@ class Utente {
                 FROM utenti 
                 WHERE id = :id";
         
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindParam(':id', $this->id, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt = $this->conn->prepare($sql);// Prepara la query
+        $stmt->bindParam(':id', $this->id, PDO::PARAM_INT);// Bind del parametro ID
+        $stmt->execute();// Esecuzione della query
         
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);// Recupera i dati e li assegna alle proprietà dell'oggetto
+         //
         if ($data) {
             $this->nome = $data['nome'];
             $this->cognome = $data['cognome'];
@@ -84,14 +96,14 @@ class Utente {
      */
     public function caricaDaEmail($email) {
         $sql = "SELECT id FROM utenti WHERE mail = :email";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindParam(':email', $email, PDO::PARAM_STR);
-        $stmt->execute();
+        $stmt = $this->conn->prepare($sql);// Prepara la query
+        $stmt->bindParam(':email', $email, PDO::PARAM_STR);// Bind del parametro email
+        $stmt->execute();// Esecuzione della query
         
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($data) {
-            $this->id = $data['id'];
+            $this->id = $data['id'];// Imposta l'ID e carica i dati
             return $this->carica();
         }
         
@@ -132,7 +144,7 @@ class Utente {
         $stmt->bindParam(':blocked', $this->blocked, PDO::PARAM_INT);
         
         if ($stmt->execute()) {
-            $this->id = $this->conn->lastInsertId();
+            $this->id = $this->conn->lastInsertId();// Ottieni l'ID dell'utente creato 
             return $this->id;
         }
         
@@ -150,14 +162,15 @@ class Utente {
         }
 
         $campiAggiornabili = ['nome', 'cognome', 'mail', 'telefono', 'citta', 
-                              'provincia', 'cap', 'via', 'ruolo', 'blocked'];
-        $setClauses = [];
-        $params = [':id' => $this->id];
+                              'provincia', 'cap', 'via', 'ruolo', 'blocked'];// Campi che possono essere aggiornati
+        $setClauses = [];// Array per le clausole SET, serve per costruire la query dinamicamente poichè non tutti i campi potrebbero essere aggiornati
+        $params = [':id' => $this->id];// Parametri per il binding
         
+         // Costruisci dinamicamente le clausole SET e i parametri, il forach itera sui campi aggiornabili e verifica se sono presenti nei dati forniti
         foreach ($campiAggiornabili as $campo) {
             if (isset($dati[$campo])) {
-                $setClauses[] = "$campo = :$campo";
-                $params[":$campo"] = $dati[$campo];
+                $setClauses[] = "$campo = :$campo";// Aggiungi la clausola SET per il campo in modo dinamico
+                $params[":$campo"] = $dati[$campo];// Aggiungi il parametro per il binding
                 
                 // Aggiorna anche la proprietà dell'oggetto
                 $this->$campo = $dati[$campo];
@@ -166,36 +179,23 @@ class Utente {
         
         // Gestione password separata (con hash)
         if (isset($dati['password']) && !empty($dati['password'])) {
+            // Aggiungi la clausola per la password con hash
             $setClauses[] = "password_hash = :password_hash";
+            // Hash della password e aggiunta al binding
             $params[':password_hash'] = password_hash($dati['password'], PASSWORD_DEFAULT);
-            $this->password_hash = $params[':password_hash'];
+            $this->password_hash = $params[':password_hash'];// Aggiorna la proprietà dell'oggetto
         }
         
         if (empty($setClauses)) {
             return false;
         }
         
-        $sql = "UPDATE utenti SET " . implode(', ', $setClauses) . " WHERE id = :id";
+        $sql = "UPDATE utenti SET " . implode(', ', $setClauses) . " WHERE id = :id";// Costruzione della query dinamica
         $stmt = $this->conn->prepare($sql);
         
         foreach ($params as $key => $value) {
             $stmt->bindValue($key, $value);
         }
-        
-        return $stmt->execute();
-    }
-
-    /**
-     * Elimina l'utente dal database
-     * @return bool - true se l'eliminazione ha successo
-     */
-    public function elimina() {
-        if ($this->id === null) {
-            return false;
-        }
-
-        $stmt = $this->conn->prepare("DELETE FROM utenti WHERE id = :id");
-        $stmt->bindParam(':id', $this->id, PDO::PARAM_INT);
         
         return $stmt->execute();
     }
@@ -226,7 +226,7 @@ class Utente {
      * @param string $password - Password in chiaro
      */
     public function setPassword($password) {
-        $this->password_hash = password_hash($password, PASSWORD_DEFAULT);
+        $this->password_hash = password_hash($password, PASSWORD_DEFAULT);// Hash della password
     }
 
     /**
@@ -235,9 +235,9 @@ class Utente {
      */
     public function getOrdini() {
         if ($this->id === null) {
-            return [];
+            return [];// Nessun ordine se l'utente non esiste
         }
-
+// Query per ottenere gli ordini dell'utente con il conteggio dei prodotti per ordine
         $sql = "SELECT o.id, o.totale, o.data,
                 (SELECT COUNT(*) FROM prodottiOrdine WHERE id_ordine = o.id) as num_prodotti
                 FROM ordini o
@@ -254,6 +254,7 @@ class Utente {
     /**
      * Conta il numero di ordini dell'utente
      * @return int - Numero di ordini
+     * serve per la dashboard admin
      */
     public function contaOrdini() {
         if ($this->id === null) {
@@ -270,45 +271,15 @@ class Utente {
     /**
      * Metodo statico per ottenere tutti gli utenti
      * @param PDO $conn - Connessione al database
-     * @param array $filtri - Filtri opzionali
      * @return array - Array di array associativi con i dati degli utenti
      */
-    public static function getAll($conn, $filtri = []) {
+    public static function getAll($conn) {
         $sql = "SELECT u.id, u.nome, u.cognome, u.mail, u.ruolo, u.blocked,
                 (SELECT COUNT(*) FROM ordini WHERE id_utente = u.id) as num_ordini
-                FROM utenti u";
-        
-        $conditions = [];
-        $params = [];
-        
-        // Applica filtri se presenti
-        if (isset($filtri['ruolo'])) {
-            $conditions[] = "u.ruolo = :ruolo";
-            $params[':ruolo'] = $filtri['ruolo'];
-        }
-        
-        if (isset($filtri['blocked'])) {
-            $conditions[] = "u.blocked = :blocked";
-            $params[':blocked'] = $filtri['blocked'];
-        }
-        
-        if (!empty($filtri['ricerca'])) {
-            $conditions[] = "(u.nome LIKE :ricerca OR u.cognome LIKE :ricerca OR u.mail LIKE :ricerca)";
-            $params[':ricerca'] = '%' . $filtri['ricerca'] . '%';
-        }
-        
-        if (!empty($conditions)) {
-            $sql .= " WHERE " . implode(' AND ', $conditions);
-        }
-        
-        $sql .= " ORDER BY u.id DESC";
+                FROM utenti u
+                ORDER BY u.id DESC";
         
         $stmt = $conn->prepare($sql);
-        
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        
         $stmt->execute();
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -317,6 +288,7 @@ class Utente {
     /**
      * Converte l'oggetto in un array associativo (senza password)
      * @return array - Rappresentazione array dell'utente
+     * serve per le risposte API
      */
     public function toArray($includiSensibili = false) {
         $data = [
@@ -346,6 +318,7 @@ class Utente {
      * @return bool - true se i dati sono validi
      */
     private function valida() {
+        // Campi obbligatori
         if (empty($this->nome) || empty($this->cognome) || empty($this->mail)) {
             return false;
         }
@@ -358,6 +331,25 @@ class Utente {
         // Validazione password (solo per nuovi utenti)
         if ($this->id === null && empty($this->password_hash)) {
             return false;
+        }
+        
+        // Validazione campi opzionali (se forniti)
+        // CAP: deve essere 5 cifre
+        if (!empty($this->cap) && !preg_match('/^\d{5}$/', $this->cap)) {
+            return false;
+        }
+        
+        // Provincia: deve essere 2 lettere maiuscole
+        if (!empty($this->provincia) && !preg_match('/^[A-Z]{2}$/', $this->provincia)) {
+            return false;
+        }
+        
+        // Telefono: deve essere tra 9 e 15 caratteri numerici
+        if (!empty($this->telefono)) {
+            $telefonoClean = preg_replace('/\s+/', '', $this->telefono);
+            if (strlen($telefonoClean) < 9 || strlen($telefonoClean) > 15) {
+                return false;
+            }
         }
         
         return true;
@@ -388,7 +380,7 @@ class Utente {
         return $stmt->rowCount() > 0;
     }
 
-    // Getter e Setter
+    // Getter e Setter: servono per accedere e modificare le proprietà private
     public function getId() {
         return $this->id;
     }

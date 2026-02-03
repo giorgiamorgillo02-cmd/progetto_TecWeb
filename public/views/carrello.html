@@ -18,7 +18,7 @@
           <button class="btn-text" id="clearCartBtn">Svuota carrello</button>
         </div>
 
-        <!-- Messaggio carrello vuoto -->
+        <!-- Messaggio carrello vuoto (visibile solo quando a 0) -->
         <div class="cart-empty" id="cartEmpty" style="display: none">
           <div class="empty-icon">🛒</div>
           <h3>Il tuo carrello è vuoto</h3>
@@ -46,15 +46,6 @@
           <span id="shipping">€4.90</span>
         </div>
 
-        <div
-          class="summary-row summary-discount"
-          id="discountRow"
-          style="display: none"
-        >
-          <span>Sconto</span>
-          <span id="discount">-€0.00</span>
-        </div>
-
         <div class="summary-divider"></div>
 
         <div class="summary-row summary-total">
@@ -79,7 +70,7 @@
     <div class="recommended-section">
       <h2>Potrebbero interessarti anche</h2>
       <div class="products-grid" id="recommendedProducts">
-        <!-- Prodotti consigliati verranno caricati qui -->
+        <!-- Prodotti consigliati verranno caricati qui in modo dinamico-->
       </div>
     </div>
   </div>

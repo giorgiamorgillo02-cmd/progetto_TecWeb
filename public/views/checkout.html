@@ -1,4 +1,5 @@
-<!-- CHECKOUT HERO -->
+<!-- CHECKOUT 
+ pagina di checkout per completare l'acquisto -->
 <section class="hero-simple">
   <div class="hero-overlay"></div>
   <div class="hero-content">
@@ -15,28 +16,41 @@
       <div class="checkout-main">
         <div class="checkout-section">
           <h2>Dati di spedizione</h2>
+          <!-- form per i dati di spedizione -->
           <form id="checkoutForm" class="checkout-form">
             <div class="form-group">
               <label for="nome">Nome</label>
-              <input type="text" id="nome" name="nome" required />
+              <input type="text" id="nome" name="nome" required readonly />
               <span class="field-error" id="nomeError"></span>
             </div>
 
             <div class="form-group">
               <label for="cognome">Cognome</label>
-              <input type="text" id="cognome" name="cognome" required />
+              <input
+                type="text"
+                id="cognome"
+                name="cognome"
+                required
+                readonly
+              />
               <span class="field-error" id="cognomeError"></span>
             </div>
 
             <div class="form-group">
               <label for="email">Email</label>
-              <input type="email" id="email" name="email" required />
+              <input type="email" id="email" name="email" required readonly />
               <span class="field-error" id="emailError"></span>
             </div>
 
             <div class="form-group">
               <label for="telefono">Telefono</label>
-              <input type="tel" id="telefono" name="telefono" required />
+              <input
+                type="tel"
+                id="telefono"
+                name="telefono"
+                required
+                readonly
+              />
               <span class="field-error" id="telefonoError"></span>
             </div>
 
@@ -48,13 +62,14 @@
                 name="via"
                 placeholder="Via, numero civico"
                 required
+                readonly
               />
               <span class="field-error" id="viaError"></span>
             </div>
 
             <div class="form-group">
               <label for="citta">Città</label>
-              <input type="text" id="citta" name="citta" required />
+              <input type="text" id="citta" name="citta" required readonly />
               <span class="field-error" id="cittaError"></span>
             </div>
 
@@ -66,13 +81,21 @@
                 name="provincia"
                 maxlength="2"
                 required
+                readonly
               />
               <span class="field-error" id="provinciaError"></span>
             </div>
 
             <div class="form-group">
               <label for="cap">CAP</label>
-              <input type="text" id="cap" name="cap" maxlength="5" required />
+              <input
+                type="text"
+                id="cap"
+                name="cap"
+                maxlength="5"
+                required
+                readonly
+              />
               <span class="field-error" id="capError"></span>
             </div>
 
@@ -88,12 +111,13 @@
           </form>
         </div>
 
-        <!-- METODO DI PAGAMENTO -->
+        <!-- METODO DI PAGAMENTO, checkbox per selezionare il metodo -->
         <div class="checkout-section">
           <h2>Metodo di pagamento</h2>
           <div class="payment-methods">
             <label class="payment-method-option">
               <input type="radio" name="payment" value="card" checked />
+              <!--checked per impostazione predefinita -->
               <span>💳 Carta di credito/debito</span>
             </label>
             <label class="payment-method-option">
@@ -135,7 +159,7 @@
             <span>Totale</span>
             <strong id="orderTotal">€0.00</strong>
           </div>
-
+          <!-- bottone per completare l'ordine -->
           <button
             type="submit"
             class="btn btn-checkout"

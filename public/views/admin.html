@@ -1,9 +1,13 @@
-<!-- ADMIN SECTION -->
+<!-- ADMIN SECTION 
+ quest pagina mostra la dashboard per l'amministratore, in cui può gestire prodotti e utenti -->
+
 <section class="admin-section" id="admin-dashboard">
   <div class="container">
     <h1>Dashboard Admin</h1>
 
-    <!-- Stats Cards -->
+    <!-- Stats Cards 
+     card che mostrano statistiche principali come numero totale di prodotti, utenti e admin 
+     -->
     <div class="admin-stats">
       <div class="stat-card">
         <h3 id="total-products">0</h3>
@@ -19,7 +23,9 @@
       </div>
     </div>
 
-    <!-- Tabs -->
+    <!-- Tabs 
+     sono i pulsanti per passare tra la gestione prodotti e la gestione utenti 
+     -->
     <div class="admin-tabs">
       <button class="admin-tab active" data-tab="products">
         Gestione Prodotti
@@ -27,7 +33,9 @@
       <button class="admin-tab" data-tab="users">Gestione Utenti</button>
     </div>
 
-    <!-- Tab Content -->
+    <!-- Tab Content 
+      qui viene mostrato il contenuto della sezione selezionata (prodotti o utenti)
+     -->
     <div class="admin-content">
       <!-- Products Section -->
       <div id="products-section" class="admin-section-content active">
@@ -50,7 +58,8 @@
     </div>
   </div>
 
-  <!-- MODALI PRODOTTO -->
+  <!-- MODALI PRODOTTO 
+   modali per la gestione dei prodotti che vengono visualizzati nella dashboard in base alle necessità, ma normalmente nascosti-->
   <!-- Aggiungi prodotto -->
   <div id="productModal" class="modal">
     <div class="modal-content">
@@ -107,7 +116,7 @@
     </div>
   </div>
 
-  <!-- elimina prodotto -->
+  <!-- elimina prodotto, modale di conferma per l'eliminazione di un prodotto -->
   <div id="deleteConfirmModal" class="modal">
     <div class="modal-content confirmation-content">
       <h3>Elimina Prodotto</h3>
@@ -125,16 +134,7 @@
   </div>
 
   <!-- MODALI UTENTE -->
-  <!-- dettagli utente -->
-  <div id="userModal" class="modal">
-    <div class="modal-content">
-      <span class="modal-close" id="closeUserModal">&times;</span>
-      <h2>Dettagli Utente</h2>
-      <div id="userDetail"></div>
-    </div>
-  </div>
-
-  <!-- blocco utente -->
+  <!-- blocco utente, modale per confermare il blocco di un utente -->
   <div id="blockUserConfirmModal" class="modal">
     <div class="modal-content confirmation-content">
       <h3 id="blockModalTitle">Blocca Utente</h3>
@@ -151,7 +151,7 @@
     </div>
   </div>
 
-  <!-- admin utente -->
+  <!-- admin utente, modale per confermare la modifica dei permessi di un utente -->
   <div id="adminRoleConfirmModal" class="modal">
     <div class="modal-content confirmation-content">
       <h3 id="adminRoleModalTitle">Gestione Ruoli</h3>
@@ -165,6 +165,20 @@
         </button>
         <button type="button" class="btn btn-danger" id="confirmAdminRoleBtn">
           Conferma
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- modale di errore, modale per mostrare messaggi di errore -->
+  <div id="errorModal" class="modal">
+    <div class="modal-content confirmation-content">
+      <h3>⚠️ Errore</h3>
+      <p id="errorModalMessage">Si è verificato un errore.</p>
+
+      <div class="form-actions" style="justify-content: center">
+        <button type="button" class="btn btn-primary" id="closeErrorBtn">
+          OK
         </button>
       </div>
     </div>

@@ -10,8 +10,10 @@
         </p>
       </div>
 
+      <!-- FORM CREDENZIALI -->
       <form class="auth-form" id="loginForm">
         <div class="form-group">
+          <!-- input email -->
           <label for="loginEmail">*Email</label>
           <input
             type="email"
@@ -20,15 +22,16 @@
             placeholder="nome@esempio.it"
             required
           />
+          <!-- messaggio di errore -->
           <span class="field-error" id="loginEmailError"></span>
         </div>
-
+        <!-- input password -->
         <div class="form-group password-input-wrapper">
           <div class="form-label-row">
             <label for="loginPassword">*Password</label>
-            <a href="#" class="form-link" id="forgotPasswordLink"
-              >Hai dimenticato la password?</a
-            >
+            <p class="form-link" id="forgotPasswordLink">
+              Hai dimenticato la password
+            </p>
           </div>
           <input
             type="password"
@@ -37,6 +40,7 @@
             placeholder="La tua password"
             required
           />
+          <!-- bottone per mostrare/nascondere la password -->
           <button
             type="button"
             class="password-toggle"
@@ -50,16 +54,16 @@
           </button>
           <span class="field-error" id="loginPasswordError"></span>
         </div>
-
+        <!-- checkbox ricordami -->
         <div class="form-row">
           <label class="checkbox-label">
             <input type="checkbox" id="rememberMe" />
             <span>Ricordami su questo dispositivo</span>
           </label>
         </div>
-
+        <!-- bottone submit -->
         <button type="submit" class="btn auth-btn">Accedi</button>
-
+        <!-- link registrazione -->
         <p class="auth-alt">
           Non hai ancora un account?
           <a href="/registrazione" data-link class="form-link">Registrati</a>
@@ -87,9 +91,10 @@
     </div>
     <div class="modal-body">
       <p class="modal-description">
-        Inserisci la tua email e la nuova password che desideri utilizzare.
+        Inserisci la nuova password che desideri utilizzare.
       </p>
       <form id="forgotPasswordForm">
+        <!-- input email readonly -->
         <div class="form-group">
           <label for="resetEmail">Email</label>
           <input
@@ -102,7 +107,7 @@
           />
           <span class="field-error" id="resetEmailError"></span>
         </div>
-
+        <!-- input nuova password -->
         <div class="form-group password-input-wrapper">
           <label for="resetNewPassword">*Nuova Password</label>
           <input
@@ -126,7 +131,7 @@
           </button>
           <span class="field-error" id="resetNewPasswordError"></span>
         </div>
-
+        <!-- input conferma password -->
         <div class="form-group password-input-wrapper">
           <label for="resetConfirmPassword">*Conferma Password</label>
           <input

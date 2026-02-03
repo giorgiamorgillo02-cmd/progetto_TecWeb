@@ -8,6 +8,7 @@
       <div class="profile-card-header">
         <h2>Informazioni personali</h2>
         <div class="profile-actions">
+          <!-- bottone per modificare le informazioni personali -->
           <button
             class="edit-profile-btn"
             id="editProfileBtn"
@@ -32,6 +33,7 @@
               ></path>
             </svg>
           </button>
+          <!-- bottone per cambiare la password -->
           <button
             class="edit-profile-btn"
             id="changePasswordBtn"
@@ -54,6 +56,8 @@
           </button>
         </div>
       </div>
+
+      <!-- corpo della card con le informazioni personali -->
       <div class="profile-card-body">
         <div class="profile-info-grid">
           <div class="profile-info-item">
@@ -92,7 +96,7 @@
       </div>
     </div>
 
-    <!-- STORICO ORDINI -->
+    <!-- STORICO ORDINI, elenco degli ordini effettuati dall'utente -->
     <div class="profile-card">
       <div class="profile-card-header">
         <h2>I miei ordini</h2>
@@ -106,11 +110,12 @@
   </div>
 </section>
 
-<!-- MODALE MODIFICA PROFILO -->
+<!-- MODALE MODIFICA PROFILO, modale per modificare le informazioni personali, ogni campo è obbligatorio  -->
 <div class="modal" id="editProfileModal">
   <div class="modal-content">
     <div class="modal-header">
       <h2>Modifica informazioni personali</h2>
+      <!--bottone per chiudere il modulo di modifica profilo -->
       <button class="modal-close" id="closeEditModal">&times;</button>
     </div>
     <div class="modal-body">
@@ -135,7 +140,7 @@
 
         <div class="form-group">
           <label for="editTelefono">Telefono</label>
-          <input type="tel" id="editTelefono" name="telefono" />
+          <input type="tel" id="editTelefono" name="telefono" required />
           <span class="field-error" id="editTelefonoError"></span>
         </div>
 
@@ -145,6 +150,7 @@
             type="text"
             id="editVia"
             name="via"
+            required
             placeholder="Via, numero civico"
           />
           <span class="field-error" id="editViaError"></span>
@@ -152,7 +158,7 @@
 
         <div class="form-group">
           <label for="editCitta">Città</label>
-          <input type="text" id="editCitta" name="citta" />
+          <input type="text" id="editCitta" name="citta" required />
           <span class="field-error" id="editCittaError"></span>
         </div>
 
@@ -162,6 +168,7 @@
             type="text"
             id="editProvincia"
             name="provincia"
+            required
             maxlength="2"
             placeholder="Es: MI"
           />
@@ -170,17 +177,17 @@
 
         <div class="form-group">
           <label for="editCap">CAP</label>
-          <input type="text" id="editCap" name="cap" maxlength="5" />
+          <input type="text" id="editCap" name="cap" required maxlength="5" />
           <span class="field-error" id="editCapError"></span>
         </div>
-
+        <!--bottone per annullare o salvare le modifiche -->
         <div class="form-actions">
           <button type="button" class="btn-secondary" id="cancelEditBtn">
             Annulla
           </button>
           <button type="submit" class="btn-primary">Salva modifiche</button>
         </div>
-
+        <!-- messaggi di errore e successo -->
         <div
           id="editErrorMessage"
           class="error-message"
@@ -209,6 +216,7 @@
       </p>
       <form id="changePasswordForm">
         <div class="form-group">
+          <!-- campo email, non modificabile -->
           <label for="changePasswordEmail">Email</label>
           <input
             type="email"
@@ -218,7 +226,7 @@
             required
           />
         </div>
-
+        <!-- campo nuova password -->
         <div class="form-group password-input-wrapper">
           <label for="changePasswordNew">Nuova Password</label>
           <input
@@ -242,7 +250,7 @@
           </button>
           <span class="field-error" id="changePasswordNewError"></span>
         </div>
-
+        <!-- campo conferma password -->
         <div class="form-group password-input-wrapper">
           <label for="changePasswordConfirm">Conferma Password</label>
           <input
