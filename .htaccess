@@ -1,14 +1,111 @@
-# Reindirizza tutto alla cartella public/
+# ============================================================================
+
+# .HTACCESS ROOT - SMISTAMENTO RICHIESTE PRINCIPALE
+
+# ============================================================================
+
+# SCOPO:
+
+# Riceve TUTTE le richieste HTTP e le indirizza alla destinazione corretta.
+
+#
+
+# ARCHITETTURA:
+
+# /progetto_TecWeb/ <- ROOT (questo file)
+
+# ├── public/ <- File statici (HTML, CSS, JS, immagini)
+
+# │ └── .htaccess <- Gestisce routing SPA
+
+# └── src/
+
+# └── api/ <- Endpoint PHP backend
+
+#
+
+# FLUSSO RICHIESTE:
+
+# 1. Richiesta arriva a: http://localhost/progetto_TecWeb/qualcosa
+
+# 2. Questo .htaccess decide:
+
+# - Se inizia con /api/ → reindirizza a src/api/
+
+# - Altrimenti → reindirizza a public/
+
+# ============================================================================
 
 <IfModule mod_rewrite.c>
+  # ===== ATTIVA MOD_REWRITE =====
+  # mod_rewrite è il modulo Apache che permette di riscrivere gli URL
   RewriteEngine On
+  
+  # ===== BASE PATH =====
+  # Definisce il percorso base del progetto rispetto alla document root
+  # Se il progetto è in http://localhost/progetto_TecWeb/, la base è questa
   RewriteBase /progetto_TecWeb/
   
-  # Reindirizza tutto a public/ tranne le chiamate API
+  # ===== REGOLA 1: REINDIRIZZAMENTO A PUBLIC/ =====
+  # Reindirizza tutte le richieste alla cartella public/ TRANNE:
+  # - Richieste che già puntano a /public/
+  # - Richieste che già puntano a /src/api/
+  #
+  # CONDIZIONI (devono essere ENTRAMBE vere):
   RewriteCond %{REQUEST_URI} !^/progetto_TecWeb/public/
-  RewriteCond %{REQUEST_URI} !^/progetto_TecWeb/src/api/
-  RewriteRule ^(.*)$ public/$1 [L]
+  # ↑ "Se l'URI NON inizia con /progetto_TecWeb/public/"
   
-  # Le chiamate API vanno direttamente a src/api/
+  RewriteCond %{REQUEST_URI} !^/progetto_TecWeb/src/api/
+  # ↑ "E se l'URI NON inizia con /progetto_TecWeb/src/api/"
+  
+  # AZIONE:
+  RewriteRule ^(.*)$ public/$1 [L]
+  # ↑ Cattura tutto (.*) e reindirizza a public/
+  # [L] = Last = ferma l'elaborazione dopo questa regola
+  #
+  # ESEMPIO:
+  # http://localhost/progetto_TecWeb/index.html
+  # → http://localhost/progetto_TecWeb/public/index.html
+  
+  # ===== REGOLA 2: GESTIONE API =====
+  # Tutte le chiamate che iniziano con /api/ vengono reindirizzate a src/api/
+  #
   RewriteRule ^api/(.*)$ src/api/$1 [L]
+  # ↑ Cattura tutto dopo /api/ e lo reindirizza a src/api/
+  # [L] = Last = ferma l'elaborazione
+  #
+  # ESEMPIO:
+  # http://localhost/progetto_TecWeb/api/me.php
+  # → http://localhost/progetto_TecWeb/src/api/me.php
+  #
+  # http://localhost/progetto_TecWeb/api/user/ordini.php
+  # → http://localhost/progetto_TecWeb/src/api/user/ordini.php
 </IfModule>
+
+# ============================================================================
+
+# PERCHÉ QUESTA STRUTTURA?
+
+# ============================================================================
+
+# 1. SICUREZZA: I file sensibili (classi PHP, config) non sono esposti
+
+# pubblicamente, solo la cartella public/ è accessibile via browser
+
+#
+
+# 2. ORGANIZZAZIONE: Separazione netta tra frontend (public/) e backend (src/)
+
+#
+
+# 3. SEO FRIENDLY: URL puliti senza /public/ visibile
+
+# Es: /prodotti invece di /public/prodotti
+
+#
+
+# 4. ROUTING API: Le API sono accessibili con prefisso /api/ pulito
+
+# Es: /api/prodotti.php invece di /src/api/prodotti.php
+
+# ============================================================================

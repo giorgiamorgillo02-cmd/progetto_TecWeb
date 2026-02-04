@@ -1,14 +1,111 @@
+# ============================================================================
+# .HTACCESS PUBLIC - ROUTING SINGLE PAGE APPLICATION (SPA)
+# ============================================================================
+# SCOPO:
+# Questo file gestisce il routing interno dell'applicazione SPA.
+# Permette URL puliti come /prodotti, /carrello senza estensioni .html
+# e senza ricaricare la pagina (client-side routing con JavaScript).
+#
+# CONTESTO:
+# Questo file viene eseguito DOPO il .htaccess root.
+# Le richieste arrivano qui già filtrate dal file root.
+#
+# FLUSSO:
+# 1. Utente naviga a: http://localhost/progetto_TecWeb/carrello
+# 2. .htaccess root reindirizza a: public/carrello
+# 3. Questo file controlla:
+#    - È un file reale? (carrello.html, style.css, ecc.) → servilo
+#    - È una directory? → servila
+#    - Non esiste? → carica index.html e lascia che il router JS gestisca
+# ============================================================================
+
 <IfModule mod_rewrite.c>
+  # ===== ATTIVA MOD_REWRITE =====
   RewriteEngine On
+  
+  # ===== BASE PATH =====
+  # Il percorso base ora è /progetto_TecWeb/public/ perché siamo nella cartella public
   RewriteBase /progetto_TecWeb/public/
   
-  # Gestisci le chiamate API - reindirizza a src/api/
+  # ===== REGOLA 1: GESTIONE CHIAMATE API =====
+  # Le chiamate API devono risalire di un livello (../) per raggiungere src/api/
+  # Questa regola è un fallback nel caso una richiesta API arrivi qui
+  #
   RewriteRule ^api/(.*)$ ../src/api/$1 [L]
+  # ↑ Risali alla root (../) e vai in src/api/
+  # [L] = Last = ferma elaborazione
+  #
+  # ESEMPIO:
+  # public/api/prodotti.php → ../src/api/prodotti.php
+  # (In realtà questa regola è raramente usata perché il .htaccess root
+  #  gestisce già le API, ma è qui come sicurezza)
   
-  # Se il file o la directory esistono, servili direttamente
+  # ===== REGOLA 2: ROUTING SPA =====
+  # Questa è la MAGIA del routing SPA!
+  #
+  # CONDIZIONE 1:
   RewriteCond %{REQUEST_FILENAME} !-f
+  # ↑ "Se il percorso richiesto NON è un file reale (-f = file)"
+  #
+  # ESEMPIO FILE REALI che VENGONO SERVITI direttamente:
+  # - /assets/css/style.css → esiste → servilo
+  # - /assets/js/app.js → esiste → servilo
+  # - /assets/img/logo.png → esiste → servilo
+  #
+  # CONDIZIONE 2:
   RewriteCond %{REQUEST_FILENAME} !-d
-  
-  # Altrimenti, reindirizza tutto a index.html per SPA routing
+  # ↑ "E se il percorso richiesto NON è una directory reale (-d = directory)"
+  #
+  # AZIONE:
   RewriteRule ^(.*)$ index.html [L]
+  # ↑ Se entrambe le condizioni sono vere, reindirizza a index.html
+  # [L] = Last = ferma elaborazione
+  #
+  # ESEMPI DI ROUTING SPA:
+  # /prodotti → non è un file → carica index.html
+  # /carrello → non è un file → carica index.html
+  # /profilo → non è un file → carica index.html
+  # /prodotto/123 → non è un file → carica index.html
+  #
+  # Poi il router JavaScript (router.js) legge l'URL e carica la view corretta!
 </IfModule>
+
+# ============================================================================
+# COME FUNZIONA IL ROUTING SPA?
+# ============================================================================
+# 1. BROWSER: Utente clicca su link "/prodotti"
+#
+# 2. HTACCESS ROOT: Reindirizza a "public/prodotti"
+#
+# 3. QUESTO FILE: 
+#    - Controlla se esiste un file chiamato "prodotti" → NO
+#    - Controlla se esiste una directory "prodotti" → NO
+#    - Carica index.html
+#
+# 4. INDEX.HTML:
+#    - Carica router.js
+#    - Router legge URL: "/prodotti"
+#    - Router carica: views/prodotti.html
+#    - Router esegue: prodotti.js
+#
+# 5. RISULTATO: Pagina prodotti visualizzata SENZA ricaricare la pagina!
+#
+# VANTAGGI:
+# ✓ URL puliti senza .html
+# ✓ Nessun refresh pagina (veloce)
+# ✓ Esperienza utente fluida
+# ✓ Funzionamento pulsanti avanti/indietro browser
+# ✓ Condivisibile via URL (http://site.com/prodotti funziona)
+# ============================================================================
+
+# ============================================================================
+# IMPORTANTE: REFRESH MANUALE
+# ============================================================================
+# Se l'utente fa refresh (F5) su http://localhost/progetto_TecWeb/carrello:
+# 1. Apache riceve richiesta "GET /progetto_TecWeb/carrello"
+# 2. .htaccess root → public/carrello
+# 3. Questo file → index.html (perché carrello non esiste come file)
+# 4. index.html carica → router vede /carrello → carica views/carrello.html
+#
+# Senza questo .htaccess, il refresh darebbe 404 Not Found!
+# ============================================================================
